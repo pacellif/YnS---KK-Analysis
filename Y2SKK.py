@@ -3,7 +3,6 @@ import uproot
 import pandas as pd
 import os
 import time
-from filereader import test
 ROOT.gROOT.SetBatch(True)
 
 #vertex probability of four tracks
@@ -40,16 +39,12 @@ def cprint (hist, name, opt="", stats=False, x=300,y=200):
 	# Start timer
 start = time.time()
 
-
-#Ipotesi di aprire i file direttamente con ssh e non da disco esterno
-#vedere chatgpt -> pacchetto paramiko
-"""
 with open('Y2SPhiRun2List.txt') as f:
     allFiles = f.readlines()
 
 for i in range(len(allFiles)):			
     allFiles[i] = allFiles[i].replace("\n", "")
-"""
+
 
 
 #	COMPUTING FUNCTIONS
@@ -98,14 +93,13 @@ elapsed = end - start
 print("Files opened in", elapsed,"s\n")
 
 #	TREES READING
-sample = test(4)
+sample= allFiles[:]
 
-
-dataY2SKK = ROOT.RDataFrame("rootuple/CandidateTree", sample)
+dataY2SKK = ROOT.RDataFrame("rootuple/CandidateTree",sample)
 if not dataY2SKK:
 	print("Connect hard disk")
 	exit()
-dataY2S = ROOT.RDataFrame("rootuple/UpsTree", sample)
+dataY2S = ROOT.RDataFrame("rootuple/UpsTree",sample)
 
 """
 #https://root.cern/doc/master/classROOT_1_1RDataFrame.html
@@ -718,8 +712,6 @@ elapsed = end - start
 print("\nComputing time: ", elapsed, "\n") 
 os.system(f"echo {elapsed} > time.txt")
 p.Close()
-
-#blablabla
 # c.Divide(2)
 # c.cd(1)
 # ROOT.gPad.SetLeftMargin(0.15)
