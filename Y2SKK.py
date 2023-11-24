@@ -93,7 +93,7 @@ elapsed = end - start
 print("Files opened in", elapsed,"s\n")
 
 #	TREES READING
-sample= allFiles[:]
+sample= allFiles[:2]
 
 dataY2SKK = ROOT.RDataFrame("rootuple/CandidateTree",sample)
 if not dataY2SKK:
@@ -101,7 +101,7 @@ if not dataY2SKK:
 	exit()
 dataY2S = ROOT.RDataFrame("rootuple/UpsTree",sample)
 
-"""
+
 #https://root.cern/doc/master/classROOT_1_1RDataFrame.html
 
 	# Start timer
@@ -166,8 +166,8 @@ m_filt = data_filt.AsNumpy(columns=["ups_vMass"])
 
 
 
-"""
-"""
+
+
 
 pt_filt = dataY2S.Filter("ups_pT < 97.4").AsNumpy(columns=["ups_pT"])
 rap_filt= dataY2S.Filter("ups_rap < 2.45 & ups_rap > -2.5").AsNumpy(columns=["ups_rap"])
@@ -283,7 +283,6 @@ print("\nTime for Mass Plot: ", elapsed,"\n")
 fileroot.Close()
 
 
-"""
 """
 	# Start timer
 start = time.time()
@@ -670,9 +669,8 @@ def phi_cand(zoom = False):
 
 
 #	MENU
-lang = input("Select plots (Separate by spacing):\n1. Leading Kaon pt\n2. Soft Kaon pt\n3. KK invariant mass (with K_pt cuts)\n4. Fit KK invariant mass\n5. Phi Candidate plot\n6. Phi candidate plot with Zoom\nENTER: 1-5 Plots\n").split()
-#print(lang)
-#exit()
+lang = input("Select plots (Separate by spacing):\n1. Leading Kaon pt\n2. Soft Kaon pt\n3. KK invariant mass (with K_pt cuts)\n4. Fit KK invariant mass\n5. Phi Candidate plot\n6. Phi candidate plot with Zoom\nENTER: 1-5 Plots\nPress \"q\" to EXIT.\n").split()
+
 print("Processing...")
 
 	# Start timer
@@ -699,6 +697,9 @@ else:
 				phi_cand()		#save to .root
 			case "6":			
 				phi_cand(zoom=True)
+			case "q":
+				print ("Bye Bye")
+				exit()
 			case _:
 				print("Not valid")
 				exit()
