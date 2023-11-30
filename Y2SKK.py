@@ -1,8 +1,11 @@
 import ROOT 
-import uproot
 import pandas as pd
 import os
 import time
+from sys import argv
+from definitions import UpsTreeDefinitions
+import declarations
+
 ROOT.gROOT.SetBatch(True)
 
 #vertex probability of four tracks
@@ -36,9 +39,6 @@ def cprint (hist, name, opt="", stats=False, x=300,y=200):
 
 #ROOT.ROOT.EnableImplicitMT(4)
 
-	# Start timer
-start = time.time()
-
 with open('Y2SPhiRun2List.txt') as f:
     allFiles = f.readlines()
 
@@ -46,88 +46,17 @@ for i in range(len(allFiles)):
     allFiles[i] = allFiles[i].replace("\n", "")
 
 
-
-#	COMPUTING FUNCTIONS
-ROOT.gInterpreter.Declare('''
-Double_t ComputePseudoRapidity(Double_t px, Double_t py, Double_t pz, Double_t ene) {
-    const ROOT::Math::PxPyPzE4D p(px, py, pz, ene);
-    return p.Eta();
-}
-Double_t ComputePhi(Double_t px, Double_t py, Double_t pz, Double_t ene) {
-    const ROOT::Math::PxPyPzE4D p(px, py, pz, ene);
-    return p.Phi();
-}
-Double_t ComputeRapidity(Double_t px, Double_t py, Double_t pz, Double_t ene) {
-    return 0.5 * log( (ene+pz)/(ene-pz) );
-}
-''')
-
-ROOT.gInterpreter.Declare('''
-Double_t ComputeMuMuPiPiInvMass(Double_t px1, Double_t py1, Double_t pz1, 
-                                    Double_t px2, Double_t py2, Double_t pz2,
-                                    Double_t px3, Double_t py3, Double_t pz3,
-                                    Double_t px4, Double_t py4, Double_t pz4) {
-    const Double_t muonMass = 0.105658;
-    const Double_t pionMass = 0.139570;
-    const ROOT::Math::PxPyPzMVector mu1(px1, py1, pz1, muonMass);
-    const ROOT::Math::PxPyPzMVector mu2(px2, py2, pz2, muonMass);
-    const ROOT::Math::PxPyPzMVector pi1(px3, py3, pz3, pionMass);
-    const ROOT::Math::PxPyPzMVector pi2(px4, py4, pz4, pionMass);
-    return (mu1+mu2+pi1+pi2).mass();
-}
-Double_t ComputePiPiInvMass(Double_t px3, Double_t py3, Double_t pz3,
-                     Double_t px4, Double_t py4, Double_t pz4) {
-    const Double_t pionMass = 0.139570;
-    const ROOT::Math::PxPyPzMVector pi1(px3, py3, pz3, pionMass);
-    const ROOT::Math::PxPyPzMVector pi2(px4, py4, pz4, pionMass);
-    return (pi1+pi2).mass();
-}
-''')
+#	TREES READING - using command line arguments
+try: 
+	sample = allFiles[:int(argv[1])] 
+except IndexError:
+	sample = allFiles[:]
 
 
-	# End timer
-end = time.time()
-
-	# Calculate elapsed time
-elapsed = end - start
-print("Files opened in", elapsed,"s\n")
-
-#	TREES READING
-sample= allFiles[:2]
-
-dataY2S = ROOT.RDataFrame("rootuple/UpsTree",sample)
-
-
-	# Start timer
-start = time.time()
-	
-#	Definition of NEW COLUMNS
-dataY2S = dataY2S.Define("ups_pT", "sqrt(ups_p4_fX*ups_p4_fX + ups_p4_fY*ups_p4_fY)")\
-.Define("ups_eta", "ComputePseudoRapidity(ups_p4_fX, ups_p4_fY, ups_p4_fZ, ups_p4_fE)")\
-.Define("ups_phi", "ComputePhi(ups_p4_fX, ups_p4_fY, ups_p4_fZ, ups_p4_fE)")\
-.Define("ups_rap", "ComputeRapidity(ups_p4_fX, ups_p4_fY, ups_p4_fZ, ups_p4_fE)")\
-.Define("muonP_pT", "sqrt(muonP_p4_fX*muonP_p4_fX + muonP_p4_fY*muonP_p4_fY)")\
-.Define("muonP_eta", "ComputePseudoRapidity(muonP_p4_fX, muonP_p4_fY, muonP_p4_fZ, muonP_p4_fE)")\
-.Define("muonP_phi", "ComputePhi(muonP_p4_fX, muonP_p4_fY, muonP_p4_fZ, muonP_p4_fE)")\
-.Define("muonP_rap", "ComputeRapidity(muonP_p4_fX, muonP_p4_fY, muonP_p4_fZ, muonP_p4_fE)")\
-.Define("muonN_pT", "sqrt(muonN_p4_fX*muonN_p4_fX + muonN_p4_fY*muonN_p4_fY)")\
-.Define("muonN_eta", "ComputePseudoRapidity(muonN_p4_fX, muonN_p4_fY, muonN_p4_fZ, muonN_p4_fE)")\
-.Define("muonN_phi", "ComputePhi(muonN_p4_fX, muonN_p4_fY, muonN_p4_fZ, muonN_p4_fE)")\
-.Define("muonN_rap", "ComputeRapidity(muonN_p4_fX, muonN_p4_fY, muonN_p4_fZ, muonN_p4_fE)")\
-.Define("ups_deltaEta", "abs(muonP_eta - muonN_eta)")\
-.Define("ups_deltaPhi", "Double_t angle = abs(muonP_phi - muonN_phi); if (angle > ROOT::Math::Pi()) angle = 2*ROOT::Math::Pi() - angle; return angle;")\
-.Define("ups_deltaR", "sqrt(ups_deltaEta*ups_deltaEta + ups_deltaPhi*ups_deltaPhi)")
-	
-	# End timer
-end = time.time()
-
-	# Calculate elapsed time
-elapsed = end - start
-print("\nTime for definition of columns: ", elapsed,"\n") 
-
+dataY2S = UpsTreeDefinitions(ROOT.RDataFrame("rootuple/UpsTree",sample))
+print("Data opened")
 
 fileroot = ROOT.TFile.Open("ups_plots/ups_mass.root","RECREATE")
-
 
 	# Start timer
 start = time.time()
@@ -152,7 +81,7 @@ rap = ROOT.RooRealVar("ups_rap", "rap(#mu#mu) ",-2.5, 2.5)
 
 data_filt = dataY2S\
 .Filter("ups_vMass > 9.6 & ups_vMass < 10.3")\
-.Filter("ups_rap < 0.7 & ups_rap > -0.7")
+.Filter("ups_pT > 25")
 
 ###################################################################
 
@@ -198,12 +127,9 @@ hist = data_filt\
 
 
 	#	FIT
-#### COME COSTRUAMO IL MODELLO PER IL FIT? SEGUIAMO IL 
-#### GAUS+CHEBISHEV O ALTRO? 
-#### AGGIUNGERE UNA GAUSSIANA CHE RAPPRESENTI LA Y3S, CERCARE VALORE NOMINALE DELLA 3S E IMPOSTARLO COME MEDIA FISSA DELLA SECONDA GAUSSIANA
 	#define variables and parameters
 
-# mass Y2S PDG = 10.02326)
+# mass Y2S PDG = 10.02326
 
 	#gaussian means
 #pdgups3s= ROOT.RooRealVar ("pdgups3s","mass Y3S PDG",10.35520,9.,11.)#try fix and not to fix
@@ -211,7 +137,7 @@ hist = data_filt\
 mean2s = ROOT.RooRealVar("#mu_{Y(2S)}", "mean of gaussians", 10., 9.44, 10.3)
 mean_reso = ROOT.RooRealVar("#mu_{res}", "mean of resolution", 10., 9.44, 10.3)
 	#sigmas
-sigma2s1 = ROOT.RooRealVar("#sigma_{1}^{Y(2S)}", "width1", 0.063, 0.01, 5.) 
+sigma2s = ROOT.RooRealVar("#sigma^{Y(2S)}", "width1", 0.063, 0.01, 5.) 
 sigma2s2 = ROOT.RooRealVar("#sigma_{res}^{Y(2S)}", "width2", 0.144, 0.01, 5.) 
 #sigma3s = ROOT.RooRealVar("#sigma_{2}^{Y(3S)}", "width3", 0.144, 0.01, 5.)
 	
@@ -225,41 +151,60 @@ bkgfrac = ROOT.RooRealVar("f_{bkg}", "fraction of background", 0.02, 0.001, 1.)
 resfrac = ROOT.RooRealVar("f_{reso}", "fraction of resolution", 0.45, 0., 1.)
 #sig2frac = ROOT.RooRealVar("f_{signal}", "fraction of second signal of 2s", 0.45, 0., 1.)
 
-#alpha = ROOT.RooRealVar ("alpha","alpha", 1.62,0.,2.)
-#n= ROOT.RooRealVar ("n","n", 2.5,0.,5.);
-#ups2sOne = ROOT.RooCBShape("Double CB", "#upsilon(2s) Pdf",YMass,mean,sigma,alpha,n);
+alpha = ROOT.RooRealVar ("alpha","alpha", 1.62, 0., 5.)
+n= ROOT.RooRealVar ("n","n", 0.1, -1., 1.);
+
   
 
 # 		MODELS FOR MASS PLOT
 
 	#signals
-sig2s1 = ROOT.RooGaussian("signal2s_1", "signal2s_1", upsmass, mean2s, sigma2s1)
-sig2s2 = ROOT.RooGaussian("signal2s_2", "signal2s_2", upsmass, mean2s, sigma2s2)
+sig2s = ROOT.RooGaussian("signal2s", "signal2s", upsmass, mean2s, sigma2s)
+cb = ROOT.RooCBShape("Double CB", "#upsilon(2s) Pdf", upsmass, mean2s, sigma2s, alpha, n)
 	
 	#backgrounds
 bkg = ROOT.RooChebychev("bkg", "Background", upsmass, ROOT.RooArgList(f0,f1,f2)) 
 
 	#total
-#model = ROOT.RooAddPdf("model", "bkg+reso+sig", [bkg,sig2s2,sig2s1], [bkgfrac,resfrac]) #with bkg
-model = ROOT.RooAddPdf("model", "reso+sig", [sig2s2,sig2s1], [resfrac]) #no bkg
+#model = ROOT.RooAddPdf("model", "bkg+sig", [bkg,sig2s], [bkgfrac]) 
+model = ROOT.RooAddPdf("model", "bkg+sig_cb", [bkg,cb], [bkgfrac]) 
 
-upsmass.setRange("range", 9.8 ,10.15)
-model.fitTo(mumuroohist, Range="range")
 
-#		PLOTTING
+
+########	FIT RESULT AND CHI SQUARED COMPUTATION  ·················
+upsmass.setRange("range", 9.8 ,10.15) #set range before fitting
+	
+fitResult = model.fitTo(mumuroohist, Range="range", Save=True)
+
+	#chi squared
+chiSquared = int(-2 * fitResult.minNll())
+ndof = upsmass.numBins() - model.getParameters(mumuroodata).getSize()
+
+reducedChiSquared = round(chiSquared/ndof)
+
+########	PLOTTING	···········································
 mumuroohist.plotOn(xframe,LineColor="b",MarkerSize=0.3)
 model.plotOn(xframe,LineColor="r")
-#model.plotOn(xframe, Components={bkg}, LineStyle=":", LineColor="r")
-model.plotOn(xframe, Components={sig2s2}, LineStyle=":", LineColor="g")
-model.plotOn(xframe, Components={sig2s1}, LineStyle=":", LineColor="b")
-model.paramOn(xframe, ROOT.RooFit.Parameters([mean2s, sigma2s1, sigma2s2, resfrac]), ROOT.RooFit.Layout(0.1, 0.9, 0.9))
 
+
+model.plotOn(xframe,LineColor="r")
+model.plotOn(xframe, Components={bkg}, LineStyle=":", LineColor="g")
+model.plotOn(xframe, Components={sig2s}, LineStyle=":", LineColor="b")
+model.paramOn(xframe, ROOT.RooFit.Layout(0.1, 0.9, 0.9)) #print all parameters
+
+	#print chisquare
+text_box = ROOT.TPaveText(0.65, 0.75, 0.9, 0.9, "NDC")
+text_box.AddText("CB+Cheb3")	#type of fit
+text_box.AddText(f"#chi^{2}/ndof = {reducedChiSquared}")
+text_box.SetFillColor(0)
+text_box.SetBorderSize(1)
 
 
 c = ROOT.TCanvas("MassPlotY2S", "MassPlotY2S", 800, 800)
 c.Divide(1,2)
 c.cd(1)
 xframe.Draw()
+text_box.Draw()
 c.cd(2)
 hist.Draw()
 
