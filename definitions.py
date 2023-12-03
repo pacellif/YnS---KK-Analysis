@@ -39,9 +39,3 @@ def CandTreeDefinitions (dataframe):
 	
 	
 	
-	
-	
-	
-	
-	
-	
