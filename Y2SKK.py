@@ -8,16 +8,6 @@ import declarations
 
 ROOT.gROOT.SetBatch(True)
 
-#vertex probability of four tracks
-#tagli al pt ()
-
-
-
-#1. eseguire i plot per tutte le variabili del jupyter notebook per la Y2s
-#2. esplorare i tagli per ogni plot (provare a plottare tutti i tagli sullo stesso frame)
-#3. Capire se ci sono dei tagli particolari per cui non si vede la 2s nel plot della 1s
-
-#4. APRIRE PIU' FILE INSIEME PER AUMENTARE LA STATISTICA - GUARDARE PRIME RIGHE DI JUPYTER
 
 #directory: /lustre/cms/store/user/vmastrap/MuMuKKRun2/Y2SKKfromSametV4
 # comando scp per copiare macro in account remoto
@@ -35,7 +25,13 @@ def cprint (hist, name, opt="", stats=False, x=300,y=200):
 	c.SaveAs(name+".pdf")
 	os.system("xdg-open "+name+".pdf")
 
-
+def binCount (var, rangeName):
+	varBinning = var.getBinning()
+	a = var.getRange(rangeName)[0]
+	b = var.getRange(rangeName)[1]
+	nbins = varBinning.binNumber(b) - varBinning.binNumber(a)
+	return nbins
+	
 
 #ROOT.ROOT.EnableImplicitMT(4)
 
@@ -178,7 +174,7 @@ fitResult = model.fitTo(mumuroohist, Range="range", Save=True)
 
 	#chi squared
 chiSquared = int(-2 * fitResult.minNll())
-ndof = upsmass.numBins() - model.getParameters(mumuroodata).getSize()
+ndof = binCount(upsmass,"range") - model.getParameters(mumuroodata).getSize()
 
 reducedChiSquared = round(chiSquared/ndof)
 
