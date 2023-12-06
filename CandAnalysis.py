@@ -364,5 +364,5 @@ end = time()
 	# Calculate elapsed time
 elapsed = end - start
 print("\nComputing time: ", elapsed, "\n") 
-os.system(f"echo {elapsed} > time.txt")
+#os.system(f"echo {elapsed} > time.txt")
 p.Close()
