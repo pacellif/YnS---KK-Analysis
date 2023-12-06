@@ -1,7 +1,9 @@
+print("\n^^^^^^^^\tY(2S)->µµ ANALYSER\t^^^^^^^^\n\nImporting modules...")
+
+
 import ROOT 
-import pandas as pd
 import os
-import time
+from time import time
 from sys import argv
 from definitions import UpsTreeDefinitions
 import declarations
@@ -14,7 +16,7 @@ ROOT.gROOT.SetBatch(True)
 # cambiare il path per aprire i file
 
 
-#	PLOT TEMPLATE
+#	PLOT TEMPLATE	-------------------------------------------------|
 def cprint (hist, name, opt="", stats=False, x=300,y=200):
 	title= "Y2S "+name
 	c = ROOT.TCanvas(title, title, x, y)
@@ -22,16 +24,16 @@ def cprint (hist, name, opt="", stats=False, x=300,y=200):
 	if stats==False: hist.SetStats(0)
 	hist.Draw(opt)
 		
-	c.SaveAs(name+".pdf")
-	os.system("xdg-open "+name+".pdf")
-
+	c.SaveAs("ups_plots/"+name+".pdf")
+	os.system("xdg-open ups_plots/"+name+".pdf")
+#------------------------------------------------------------------
 def binCount (var, rangeName):
 	varBinning = var.getBinning()
 	a = var.getRange(rangeName)[0]
 	b = var.getRange(rangeName)[1]
 	nbins = varBinning.binNumber(b) - varBinning.binNumber(a)
 	return nbins
-	
+#------------------------------------------------------------------	
 
 #ROOT.ROOT.EnableImplicitMT(4)
 
@@ -49,301 +51,315 @@ except IndexError:
 	sample = allFiles[:]
 
 
+print("Creating Dataset...")
 dataY2S = UpsTreeDefinitions(ROOT.RDataFrame("rootuple/UpsTree",sample))
-print("Data opened")
+
 
 fileroot = ROOT.TFile.Open("ups_plots/ups_mass.root","RECREATE")
 
-	# Start timer
-start = time.time()
+
+#	MUON TRANSVERSE MOMENTUM
+def mu_pt():
+	hist1 = dataY2S.Histo1D(("mu1_pt Distribution", "mu1_pt Distribution;p_{T}(#mu^{+});Counts", 500, 0., 40.), "mu1_pt")
+
+	hist2 = dataY2S.Histo1D(("mu2_pt Distribution", "mu2_pt Distribution;p_{T}(#mu^{-});Counts", 500, 0., 40.), "mu2_pt")
+
+		#other two variables - same results
+	hist3 = dataY2S.Histo1D(("muonP_pT Distribution", "muonP_pT Distribution;p_{T}(#mu^{+});Counts", 500, 0., 40.), "muonP_pT")
+
+	hist4 = dataY2S.Histo1D(("muonN_pT Distribution", "muonN_pT Distribution;p_{T}(#mu^{-});Counts", 500, 0., 40.), "muonN_pT")
+
+	c = ROOT.TCanvas("Muon pT distribution", "Muon pT distribution")
+
+	c.Divide(1,2)
+
+	c.cd(1)
+	hist1.Draw()
 
 
-#	VARIABLES	###################################################
-
-upsmass = ROOT.RooRealVar("ups_vMass", "m(#mu#mu) [GeV]", 9.6, 10.3)
-upsmass.setBins(500)
-
-VertexProb = ROOT.RooRealVar("ups_vProb", "ups_vProb", 0, 1)
-VertexProb.setBins(1000)
-
-YpT = ROOT.RooRealVar("ups_pT", "p_{T}(#mu#mu) [GeV/c]",0.0, 66.4)
-rap = ROOT.RooRealVar("ups_rap", "rap(#mu#mu) ",-2.5, 2.5)
+	c.cd(2)
+	hist2.Draw()
 
 
-
-#	FILTERS + DICTIONARY OF FILTERS
-
-###################################################################
-
-data_filt = dataY2S\
-.Filter("ups_vMass > 9.6 & ups_vMass < 10.3")\
-.Filter("ups_pT > 25")
-
-###################################################################
-
-m_filt = data_filt.AsNumpy(columns=["ups_vMass"])
-
-
-
-
-
-
-pt_filt = dataY2S.Filter("ups_pT < 97.4").AsNumpy(columns=["ups_pT"])
-rap_filt= dataY2S.Filter("ups_rap < 2.45 & ups_rap > -2.5").AsNumpy(columns=["ups_rap"])
-p_filt= dataY2S.Filter("ups_rap < 1 & ups_rap > 0").AsNumpy(columns=["ups_vProb"])
-
-#rooDataSet = dataY2S.Book(ROOT.std.move(ROOT.RooDataSetHelper("dataset", "Title of dataset", ROOT.RooArgSet(YMass,VertexProb, YpT))), ("ups_vMass","ups_vProb", "ups_pT"))
-#rooDataSet = dataY2S.Book(ROOT.std.move(ROOT.RooDataSetHelper("dataset", "Title of dataset", ROOT.RooArgSet(YMass))), ["ups_vMass"])
-
-#------> DICTIONARY
-d = {
-"ups_vMass": m_filt["ups_vMass"],
-"ups_pT": pt_filt["ups_pT"],
-"ups_rap": rap_filt["ups_rap"],
-"ups_vProb": p_filt["ups_vProb"]
-}
-
-
-#	DATASETS
-
-mumuroodata = ROOT.RooDataSet.from_numpy(d, ROOT.RooArgSet(upsmass))
-mumuroohist = mumuroodata.binnedClone()
-
-#pt_ds = ROOT.RooDataSet.from_numpy(d, ROOT.RooArgSet(YpT))
-#rap_ds = ROOT.RooDataSet.from_numpy(d, ROOT.RooArgSet(rap))
-#prob_ds = ROOT.RooDataSet.from_numpy(d, ROOT.RooArgSet(VertexProb))
-
+	c.SaveAs("ups_plots/muonPTdistribution.pdf")
+	fileroot.WriteObject(c,"MuonPT")
+	os.system("xdg-open ups_plots/muonPTdistribution.pdf")
 
 ######	   MASS PLOT	#########
 
-xframe = upsmass.frame(Title="Y(2S) Mass")
-hist = data_filt\
-.Histo1D(("dimuon invariant mass", "Y(2S) #rightarrow #mu^{+}#mu^{-};m(#mu^{+}#mu^{-}) [GeV];Counts", 500, 9.6, 10.3), "ups_vMass")
+def m_Y2S():
+
+	hist = dataY2S\
+	.Filter("ups_vMass > 9.6 & ups_vMass < 10.3")\
+	.Filter("ups_pT > 15")\
+	.Histo1D(("dimuon invariant mass", "Y(2S) #rightarrow #mu^{+}#mu^{-};m(#mu^{+}#mu^{-}) [GeV];Counts", 500, 9.6, 10.3), "ups_vMass")
+	cprint(hist, "YinvMass")
 
 
-
-	#	FIT
-	#define variables and parameters
-
-# mass Y2S PDG = 10.02326
-
-	#gaussian means
-#pdgups3s= ROOT.RooRealVar ("pdgups3s","mass Y3S PDG",10.35520,9.,11.)#try fix and not to fix
-
-mean2s = ROOT.RooRealVar("#mu_{Y(2S)}", "mean of gaussians", 10., 9.44, 10.3)
-mean_reso = ROOT.RooRealVar("#mu_{res}", "mean of resolution", 10., 9.44, 10.3)
-	#sigmas
-sigma2s = ROOT.RooRealVar("#sigma^{Y(2S)}", "width1", 0.063, 0.01, 5.) 
-sigma2s2 = ROOT.RooRealVar("#sigma_{res}^{Y(2S)}", "width2", 0.144, 0.01, 5.) 
-#sigma3s = ROOT.RooRealVar("#sigma_{2}^{Y(3S)}", "width3", 0.144, 0.01, 5.)
+#	FIT		------------------------------------------------
 	
-	#chebychev coefficients
-f0 = ROOT.RooRealVar("f0", "f0", 0.1, -8., 8.)
-f1 = ROOT.RooRealVar("f1", "f1", 0.1, -8., 8.)
-f2 = ROOT.RooRealVar("f2", "f2", 0.1, -8., 8.)
+def fit_Y2S():	
 	
-	#fractions
-bkgfrac = ROOT.RooRealVar("f_{bkg}", "fraction of background", 0.02, 0.001, 1.)
-resfrac = ROOT.RooRealVar("f_{reso}", "fraction of resolution", 0.45, 0., 1.)
-#sig2frac = ROOT.RooRealVar("f_{signal}", "fraction of second signal of 2s", 0.45, 0., 1.)
-
-alpha = ROOT.RooRealVar ("alpha","alpha", 1.62, 0., 5.)
-n= ROOT.RooRealVar ("n","n", 0.1, -1., 1.);
-
-  
-
-# 		MODELS FOR MASS PLOT
-
-	#signals
-sig2s = ROOT.RooGaussian("signal2s", "signal2s", upsmass, mean2s, sigma2s)
-cb = ROOT.RooCBShape("Double CB", "#upsilon(2s) Pdf", upsmass, mean2s, sigma2s, alpha, n)
+	upsmass = ROOT.RooRealVar("ups_vMass", "m(#mu#mu) [GeV]", 9.6, 10.3)
+	upsmass.setBins(500)
 	
-	#backgrounds
-bkg = ROOT.RooChebychev("bkg", "Background", upsmass, ROOT.RooArgList(f0,f1,f2)) 
-
-	#total
-#model = ROOT.RooAddPdf("model", "bkg+sig", [bkg,sig2s], [bkgfrac]) 
-model = ROOT.RooAddPdf("model", "bkg+sig_cb", [bkg,cb], [bkgfrac]) 
-
-
-
-########	FIT RESULT AND CHI SQUARED COMPUTATION  ·················
-upsmass.setRange("range", 9.8 ,10.15) #set range before fitting
+	#alternatively
+	#mumuroohist = dataY2S.Book(ROOT.std.move(ROOT.RooDataSetHelper("dataset", "Title of dataset", ROOT.RooArgSet(YMass))), ["ups_vMass"])
 	
-fitResult = model.fitTo(mumuroohist, Range="range", Save=True)
+	massDF = dataY2S\
+	.Filter("ups_vMass > 9.6 & ups_vMass < 10.3")\
+	.Filter("ups_pT > 15")\
+	.AsNumpy(columns=["ups_vMass"])
+	
+	mumuroodata = ROOT.RooDataSet\
+	.from_numpy({"ups_vMass": massDF["ups_vMass"]},ROOT.RooArgSet(upsmass))
+	mumuroohist = mumuroodata.binnedClone()
+	
+	xframe = upsmass.frame(Title="Y(2S) Mass")
+	# mass Y2S PDG = 10.02326
+	# mass Y3S PDG = 10.35520
 
-	#chi squared
-chiSquared = int(-2 * fitResult.minNll())
-ndof = binCount(upsmass,"range") - model.getParameters(mumuroodata).getSize()
+		#mean of signal
+	mean2s = ROOT.RooRealVar("#mu_{Y(2S)}", "mean of gaussians", 10., 9.8, 10.2)
 
-reducedChiSquared = round(chiSquared/ndof)
+		#sigma
+	sigma2s = ROOT.RooRealVar("#sigma^{Y(2S)}", "width1", 0.063, 0.01, 5.) 
 
-########	PLOTTING	···········································
-mumuroohist.plotOn(xframe,LineColor="b",MarkerSize=0.3)
-model.plotOn(xframe,LineColor="r")
+		#CrystalBall parameters
+	alpha = ROOT.RooRealVar ("alpha","alpha", 1.62, 0., 5.)
+	n= ROOT.RooRealVar ("n","n", 0.1, -1., 1.)
+
+		#chebychev coefficients
+	f0 = ROOT.RooRealVar("f0", "f0", 5., 0., 10.)
+	f1 = ROOT.RooRealVar("f1", "f1", -1., -100., 0)
+	f2 = ROOT.RooRealVar("f2", "f2", 2., 0., 8.)
+		
+		#bkg normalization fraction
+	bkgfrac = ROOT.RooRealVar("f_{bkg}", "fraction of background", 0.02, 0.001, 1.)
+
+	# 		MODELS FOR MASS PLOT
+
+		#signals
+	sig2s = ROOT.RooGaussian("signal2s", "signal2s", upsmass, mean2s, sigma2s)
+	cb = ROOT.RooCBShape("Double CB", "#upsilon(2s) Pdf", upsmass, mean2s, sigma2s, alpha, n)
+		
+		#backgrounds
+	bkg2 = ROOT.RooChebychev("bkg", "Background", upsmass, ROOT.RooArgList(f0,f1))
+	bkg3 = ROOT.RooChebychev("bkg", "Background", upsmass, ROOT.RooArgList(f0,f1,f2))
+
+		#MODELS
+	model1 = ROOT.RooAddPdf("model1", "Cheb2+Gaus", [bkg2,sig2s], [bkgfrac]) 
+	model2 = ROOT.RooAddPdf("model2", "Cheb2+CB", [bkg2,cb], [bkgfrac]) 
+	model3 = ROOT.RooAddPdf("model3", "Cheb3+Gaus", [bkg3,sig2s], [bkgfrac]) 
+	model4 = ROOT.RooAddPdf("model4", "Cheb3+CB", [bkg3,cb], [bkgfrac]) 
+
+	allModels = [model1, model2, model3, model4]
+
+		#choose model to fit
+	model = allModels[2]
+
+	########	FIT RESULT AND CHI SQUARED COMPUTATION  ·················
+	upsmass.setRange("range", 9.8 ,10.25)	 #set range before fitting
+		
+	fitResult = model.fitTo(mumuroohist, Range="range", Save=True)
+
+		#chi squared
+	chiSquared = int(-2 * fitResult.minNll())
+	ndof = binCount(upsmass,"range") - model.getParameters(mumuroodata).getSize()
+
+	reducedChiSquared = round(chiSquared/ndof)
+
+	########	PLOTTING	···········································
+	mumuroohist.plotOn(xframe,LineColor="b",MarkerSize=0.3)
+	model.plotOn(xframe,LineColor="r")
+
+	component = model.pdfList()
 
 
-model.plotOn(xframe,LineColor="r")
-model.plotOn(xframe, Components={bkg}, LineStyle=":", LineColor="g")
-model.plotOn(xframe, Components={sig2s}, LineStyle=":", LineColor="b")
-model.paramOn(xframe, ROOT.RooFit.Layout(0.1, 0.9, 0.9)) #print all parameters
+	model.plotOn(xframe, Components={component[0]}, LineStyle=":", LineColor="g")
+	model.plotOn(xframe, Components={component[1]}, LineStyle=":", LineColor="b")
+	model.plotOn(xframe,LineColor="r")	#total
+	
+	model.paramOn(xframe, ROOT.RooFit.Layout(0.1, 0.9, 0.9)) #print all parameters
 
-	#print chisquare
-text_box = ROOT.TPaveText(0.65, 0.75, 0.9, 0.9, "NDC")
-text_box.AddText("CB+Cheb3")	#type of fit
-text_box.AddText(f"#chi^{2}/ndof = {reducedChiSquared}")
-text_box.SetFillColor(0)
-text_box.SetBorderSize(1)
+		#print chisquare
+	text_box = ROOT.TPaveText(0.65, 0.75, 0.9, 0.9, "NDC")
+	text_box.AddText( str(model.getTitle()) )	#type of fit
+	text_box.AddText(f"#chi^{2}/ndof = {reducedChiSquared}")
+	text_box.SetFillColor(0)
+	text_box.SetBorderSize(1)
+	
+		#print fit and pullplot
+	c = ROOT.TCanvas("MassPlotY2S", "MassPlotY2S")
+	c.Divide(1,2)
+	c.cd(1)
+	xframe.Draw()
+	text_box.Draw()
+	c.cd(2)
+	xframe.pullHist().Draw()	#pull histogram
 
+	fileroot.WriteObject(c,"UpsInvMass")
+	c.SaveAs("ups_plots/MassPlotY2S.pdf")
+	os.system("xdg-open ups_plots/MassPlotY2S.pdf")
 
-c = ROOT.TCanvas("MassPlotY2S", "MassPlotY2S", 800, 800)
-c.Divide(1,2)
-c.cd(1)
-xframe.Draw()
-text_box.Draw()
-c.cd(2)
-hist.Draw()
-
-fileroot.WriteObject(c,"UpsInvMass")
-c.SaveAs("ups_plots/MassPlotY2S.pdf")
-os.system("xdg-open ups_plots/MassPlotY2S.pdf")
-
-	# End timer
-end = time.time()
-
-	# Calculate elapsed time
-elapsed = end - start
-print("\nTime for Mass Plot: ", elapsed,"\n") 
-
-fileroot.Close()
-
-
-"""
-	# Start timer
-start = time.time()
 
 #######		TRANSVERSAL MOMENTUM PLOTS	#############
 
-#pt_frame = YpT.frame(Title="Y(2S) Transverse Momentum")
-#pt_ds.plotOn(pt_frame,LineColor="b",MarkerSize=0.3)
 
-hist16 = dataY2S.Filter("run < 290000").Histo1D(("Y(2S) transverse momentum", "Y(1S) transverse momentum;p_{T}(#mu#mu) [GeV];Counts", 500, 0., 50), "ups_pT")
-hist17 = dataY2S.Filter("run < 310000").Histo1D(("Y(2S) transverse momentum", "Y(1S) transverse momentum;p_{T}(#mu#mu) [GeV];Counts", 500, 0., 50), "ups_pT")
+def Y_pt():
+	hist16 = dataY2S.Filter("run < 290000").Histo1D(("Y(2S) transverse momentum", "Y(2S) transverse momentum;p_{T}(#mu#mu) [GeV];Counts", 500, 0., 50), "ups_pT")
+	hist17 = dataY2S.Filter("run < 310000").Histo1D(("Y(2S) transverse momentum", "Y(2S) transverse momentum;p_{T}(#mu#mu) [GeV];Counts", 500, 0., 50), "ups_pT")
 
-hist18 = dataY2S.Histo1D(("Y(2S) transverse momentum", "Y(2S) transverse momentum (stacked);p_{T}(#mu#mu) [GeV];Counts", 500, 0., 50.), "ups_pT")
+	hist18 = dataY2S.Histo1D(("Y(2S) transverse momentum", "Y(2S) transverse momentum (stacked);p_{T}(#mu#mu) [GeV];Counts", 500, 0., 50.), "ups_pT")
 
-c_pt = ROOT.TCanvas("Y(2S) pT", "Y(2S) pT", 800, 800)
-
-
-hist17.SetFillColor(5)
-hist16.SetFillColor(3)
+	c_pt = ROOT.TCanvas("Y(2S) pT", "Y(2S) pT")
 
 
-hist18.Draw("")
-hist17.Draw("same")
-hist16.Draw("same")
+	hist17.SetFillColor(5)
+	hist16.SetFillColor(3)
 
-c_pt.SaveAs("ups_plots/pt.pdf")
-os.system("xdg-open ups_plots/pt.pdf")
+
+	hist18.Draw("")
+	hist17.Draw("same")
+	hist16.Draw("same")
+
+	c_pt.SaveAs("ups_plots/pt.pdf")
+	os.system("xdg-open ups_plots/pt.pdf")
+
 
 ###########		PROBABILITY PLOT	###############
-#pframe = VertexProb.frame(Title="Y(2S) Probability")
-#prob_ds.plotOn(pframe, LineColor="b", MarkerSize= 0.3)
 
-p_hist = dataY2S.Histo1D(("Y(2S) Probability", "Y(2S) Probability ;p;Counts", 500, 0., 1.), "ups_vProb")
+def Y_vProb():
+	p_hist = dataY2S.Histo1D(("Y(2S) Probability", "Y(2S) Probability ;p;Counts", 500, 0., 1.), "ups_vProb")
 
-c_p = ROOT.TCanvas("Y2S prob", "Y2S prob", 800, 800)
-#c_p.Divide(1,2)
-#c_p.cd(1)
-#pframe.Draw()
-#c_p.cd(2)
-p_hist.Draw()
-c_p.SaveAs("ups_plots/prob.pdf")
-os.system("xdg-open ups_plots/prob.pdf")
+	c_p = ROOT.TCanvas("Y2S prob", "Y2S prob")
+	
+	p_hist.Draw()
+	c_p.SaveAs("ups_plots/prob.pdf")
+	os.system("xdg-open ups_plots/prob.pdf")
 
 
 ##########		RAPIDITY PLOT	###########
-#rap_frame = rap.frame(Title="Y(2S) Rapidity")
-#rap_ds.plotOn(rap_frame,LineColor="b",MarkerSize=0.3)
 
-hist16 = dataY2S.Filter("run < 290000").Histo1D(("Y(2S) Rapidity", "Y(2S) Rapidity;y(#mu#mu);Counts", 500,-2.5,2.5), "ups_rap")
+def Y_rap():
+	hist16 = dataY2S.Filter("run < 290000").Histo1D(("Y(2S) Rapidity", "Y(2S) Rapidity;y(#mu#mu);Counts", 500,-2.5,2.5), "ups_rap")
+	
+	hist17 = dataY2S.Filter("run < 310000").Histo1D(("Y(2S) rapidity", "Y(2S) rapidity;y(#mu#mu);Counts", 500,-2.5,2.5), "ups_rap")
+	
+	hist19 = dataY2S.Histo1D(("Y(2S) rapidity", "Y(2S) rapidity (stacked);y(#mu#mu);Counts", 500, -2.5, 2.5), "ups_rap")
 
-#cprint(hist16, "ups_plots/Rapidity")
-
-
-hist17 = dataY2S.Filter("run < 310000").Histo1D(("Y(2S) rapidity", "Y(2S) rapidity;y(#mu#mu);Counts", 500,-2.5,2.5), "ups_rap")
-hist19 = dataY2S.Histo1D(("Y(2S) rapidity", "Y(2S) rapidity (stacked);y(#mu#mu);Counts", 500, -2.5, 2.5), "ups_rap")
-
-hist17.SetFillColor(5)
-hist16.SetFillColor(3)
+	hist17.SetFillColor(5)
+	hist16.SetFillColor(3)
 
 
-c_rap = ROOT.TCanvas("Y2S Rapidity", "Y2S Rapidity", 800, 800)
+	c_rap = ROOT.TCanvas("Y2S Rapidity", "Y2S Rapidity")
 
-hist19.Draw("")
-hist17.Draw("same")
-hist16.Draw("same")
+	hist19.Draw("")
+	hist17.Draw("same")
+	hist16.Draw("same")
 
-c_rap.SaveAs("ups_plots/rapidity.pdf")
-os.system("xdg-open ups_plots/rapidity.pdf")
+	c_rap.SaveAs("ups_plots/rapidity.pdf")
+	os.system("xdg-open ups_plots/rapidity.pdf")
 
 
 #	PSEUDRAPIDITY PLOT	##############################
-hist18 = dataY2S.Histo1D(("Y(2S) pseudorapidity", "Y(2S) Pseudorapidity (stacked);#eta(#mu#mu);Counts", 500, -2.0, 2.0), "ups_eta")
-hist16 = dataY2S.Filter("run < 290000").Histo1D(("Y(2S) pseudorapidity", "Y(2S) Pseudorapidity (stacked);#eta(#mu#mu);Counts", 500, -2.0, 2.0), "ups_eta")
-hist17 = dataY2S.Filter("run < 310000").Histo1D(("Y(2S) pseudorapidity", "Y(2S) Pseudorapidity (stacked);#eta(#mu#mu);Counts", 500, -2.0, 2.0), "ups_eta")
+def Y_pseudorap():
 
-hist17.SetFillColor(5)
-hist16.SetFillColor(3)
-
-
-c_psrap = ROOT.TCanvas("Y2S Pseudorapidity", "Y2S Pseudorapidity", 800, 800)
-
-hist18.Draw("")
-hist17.Draw("same")
-hist16.Draw("same")
-
-c_psrap.SaveAs("ups_plots/Pseudorapidity.pdf")
-os.system("xdg-open ups_plots/Pseudorapidity.pdf")
-
-#cprint(hist18, "ups_plots/Pseudorapidity")
-
-"""
-"""
-#	DIMUON DECAY - ANGULAR PHASE PLOT	##############################
-hist = data_filt.Histo2D(("dimuon decay", "Y(2S) #rightarrow #mu^{+}#mu^{-};#Delta#eta(#mu^{+}#mu^{-});#Delta#phi(#mu^{+}#mu^{-})", 50, 0., 2.5, 50, 0., 3.), "ups_deltaEta", "ups_deltaPhi")
-cprint(hist, "ups_plots/Dimuon", "colz" )
-
-
-#	DIMUON DECAY - PHASE PLOT	 ###########################################
-hist = data_filt.Histo2D(("Dimuon decay", "Y(2S) #rightarrow #mu^{+}#mu^{-};#DeltaR(#mu^{+}#mu^{-});p_{T}(#mu^{+}#mu^{-}) [GeV]", 50, 0, 3, 50, 0, 150), "ups_deltaR", "ups_pT")
-cprint(hist, "ups_plots/Dimuon2", "colz" )
-
-hist = data_filt.Profile1D(("Dimuon decay", "Y(2S) #rightarrow #mu^{+}#mu^{-};p_{T}(#mu^{+}#mu^{-}) [GeV];#DeltaR(#mu^{+}#mu^{-})", 50, 0, 150), "ups_pT", "ups_deltaR")
-cprint(hist,"ups_plots/profile",stats=True)
+	hist18 = dataY2S.Histo1D(("Y(2S) pseudorapidity", "Y(2S) Pseudorapidity (stacked);#eta(#mu#mu);Counts", 500, -2.0, 2.0), "ups_eta")
 	
+	hist16 = dataY2S.Filter("run < 290000").Histo1D(("Y(2S) pseudorapidity", "Y(2S) Pseudorapidity (stacked);#eta(#mu#mu);Counts", 500, -2.0, 2.0), "ups_eta")
+	
+	hist17 = dataY2S.Filter("run < 310000").Histo1D(("Y(2S) pseudorapidity", "Y(2S) Pseudorapidity (stacked);#eta(#mu#mu);Counts", 500, -2.0, 2.0), "ups_eta")
+
+	hist17.SetFillColor(5)
+	hist16.SetFillColor(3)
+
+
+	c = ROOT.TCanvas("Y2S Pseudorapidity", "Y2S Pseudorapidity")
+
+	hist18.Draw("")
+	hist17.Draw("same")
+	hist16.Draw("same")
+
+	c.SaveAs("ups_plots/Pseudorapidity.pdf")
+	os.system("xdg-open ups_plots/Pseudorapidity.pdf")
+
+
+
+#	DIMUON DECAY GEOMETRY		##############################
+def dimuon_decay():
+
+		#	angular phase plot
+	hist1 = dataY2S.Histo2D(("dimuon decay", "Y(2S) #rightarrow #mu^{+}#mu^{-};#Delta#eta(#mu^{+}#mu^{-});#Delta#phi(#mu^{+}#mu^{-})", 50, 0., 2.5, 50, 0., 3.), "ups_deltaEta", "ups_deltaPhi")
+	cprint(hist1, "Dimuon", "colz" )
+
+
+		#	phase plot
+	hist2 = dataY2S.Histo2D(("Dimuon decay", "Y(2S) #rightarrow #mu^{+}#mu^{-};#DeltaR(#mu^{+}#mu^{-});p_{T}(#mu^{+}#mu^{-}) [GeV]", 50, 0, 3, 50, 0, 150), "ups_deltaR", "ups_pT")
+	cprint(hist2, "Dimuon2", "colz" )
+
+		#	phase profile
+	hist3 = dataY2S.Profile1D(("Dimuon decay", "Y(2S) #rightarrow #mu^{+}#mu^{-};p_{T}(#mu^{+}#mu^{-}) [GeV];#DeltaR(#mu^{+}#mu^{-})", 50, 0, 150), "ups_pT", "ups_deltaR")
+	cprint(hist3,"profile",stats=True)
+	
+
+
+#	MENU	
+lang = input("\nSelect plots (Separate by spacing):\n1. Single Muon pT Plot\n2. Y(2S) Mass Plot\n3. Fit of Y(2S) Mass Plot\n4. Y(2S) pT\n5. Y(2S) Vertex Probability\n6. Y(2S) Rapidity\n7. Y(2S) Pseudorapidity\n8. Plots for Geometry of Di-Muon Decay\nENTER to print all plots.\nPress \"q\" to EXIT.\n").split()
+
+if "q" not in lang:
+	print("Processing...") 
+	
+	# Start timer
+start = time()
+
+if not lang:	#print all plots		
+
+	mu_pt()
+	m_Y2S()
+	fit_Y2S()
+	Y_pt()		
+	Y_vProb()		
+	Y_rap()
+	Y_pseudorap()
+	dimuon_decay()
+	
+else:
+	for i in lang:
+		match i:
+			case "1":
+				mu_pt()
+			case "2":
+				m_Y2S()
+			case "3":
+				fit_Y2S()
+			case "4":
+				Y_pt()		
+			case "5":
+				Y_vProb()
+			case "6":		
+				Y_rap()
+			case "7":		
+				Y_pseudorap()
+			case "8":		
+				dimuon_decay()
+			case "q":
+				print ("Bye Bye")
+				exit()
+			case _:
+				print("Not valid")
+				exit()
+
+
 	# End timer
-end = time.time()
+end = time()
 
 	# Calculate elapsed time
 elapsed = end - start
-print("\nTime for other Y Plots: ", elapsed,"\n") 
-"""
+print("\nComputing time: ", elapsed, "\n") 
 
 
-# c.Divide(2)
-# c.cd(1)
-# ROOT.gPad.SetLeftMargin(0.15)
-# xframe.GetYaxis().SetTitleOffset(1.6)
-
-# c.cd(2)
-# ROOT.gPad.SetLeftMargin(0.15)
-# xframe2.GetYaxis().SetTitleOffset(1.6)
-# xframe2.Draw()
-
-
-
-
+fileroot.Close()
 
 #From root to Pandas
 # Y2S_tree = myfileY2SKK["rootuple/UpsTree;1"]
@@ -355,70 +371,6 @@ print("\nTime for other Y Plots: ", elapsed,"\n")
 # data_Y2S = Y2S_tree.arrays(library="pd")
 # print(data_Y2S.head())
 
-
-
-
-
-
-
-
-
-
-
-#Roofit ToolBox
-
-# x = ROOT.RooRealVar("x", "x", -10, 10)
-# mean = ROOT.RooRealVar("mean", "mean of gaussian", 1, -10, 10)
-# sigma = ROOT.RooRealVar("sigma", "width of gaussian", 1, 0.1, 10)
- 
-# # Build gaussian pdf in terms of x,mean and sigma
-# gauss = ROOT.RooGaussian("gauss", "gaussian PDF", x, mean, sigma)
- 
-# # Construct plot frame in 'x'
-# xframe = x.frame(Title="Gaussian pdf")  # RooPlot
- 
-# # Plot model and change parameter values
-# # ---------------------------------------------------------------------------
-# # Plot gauss in frame (i.e. in x)
-# gauss.plotOn(xframe)
- 
-# # Change the value of sigma to 3
-# sigma.setVal(3)
- 
-# # Plot gauss in frame (i.e. in x) and draw frame on canvas
-# gauss.plotOn(xframe, LineColor="r")
-
-# data = gauss.generate({x}, 10000)  # ROOT.RooDataSet
- 
-# # Make a second plot frame in x and draw both the
-# # data and the pdf in the frame
-# xframe2 = x.frame(Title="Gaussian pdf with data")  # RooPlot
-# data.plotOn(xframe2)
-# gauss.plotOn(xframe2)
- 
-# # Fit model to data
-# # -----------------------------
-# # Fit pdf to data
-# gauss.fitTo(data)
- 
-# # Print values of mean and sigma (that now reflect fitted values and
-# # errors)
-# mean.Print()
-# sigma.Print()
- 
-# # Draw all frames on a canvas
-# c = ROOT.TCanvas("rf101_basics", "rf101_basics", 800, 400)
-# c.Divide(2)
-# c.cd(1)
-# ROOT.gPad.SetLeftMargin(0.15)
-# xframe.GetYaxis().SetTitleOffset(1.6)
-# xframe.Draw()
-# c.cd(2)
-# ROOT.gPad.SetLeftMargin(0.15)
-# xframe2.GetYaxis().SetTitleOffset(1.6)
-# xframe2.Draw()
- 
-# c.SaveAs("rf101_basics.png")
 
 #Upsilon:
 ['run', 'event', 'numPrimaryVertices', 'trigger', 'ups_p4', 'muonP_p4', 'muonN_p4', 'iPVwithmuons_ups', 'ups_vertexWeight', 'ups_vProb', 'ups_vMass', 'ups_vNChi2', 'ups_DCA', 'ups_ctauPV', 'ups_ctauErrPV', 'ups_lxyPV', 'ups_lxyErrPV', 'ups_cosAlpha', 'ups_ctauBS', 'ups_ctauErrBS', 'ups_lxyBS', 'ups_lxyErrBS', 'mu1_pt', 'mu1_ptErr', 'mu1_d0', 'mu1_d0Err', 'mu1_dz', 'mu1_dzErr', 'mu1_dxy', 'mu1_dxyErr', 'mu1_nvsh', 'mu1_nvph', 'mu1_charge', 'mu2_pt', 'mu2_ptErr', 'mu2_d0', 'mu2_d0Err', 'mu2_dz', 'mu2_dzErr', 'mu2_dxy', 'mu2_dxyErr', 'mu2_nvsh', 'mu2_nvph', 'mu2_charge']

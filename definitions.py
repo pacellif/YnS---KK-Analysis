@@ -1,9 +1,10 @@
 #	DEFINITIONS OF NEW COLUMNS
 
-#Definition for Upsilon dataset
+#Definitions for Upsilon dataset
 
 def UpsTreeDefinitions (dataframe):
-	return dataframe.Define("ups_pT", "sqrt(ups_p4_fX*ups_p4_fX + ups_p4_fY*ups_p4_fY)")\
+	return dataframe\
+	.Define("ups_pT", "sqrt(ups_p4_fX*ups_p4_fX + ups_p4_fY*ups_p4_fY)")\
 	.Define("ups_eta", "ComputePseudoRapidity(ups_p4_fX, ups_p4_fY, ups_p4_fZ, ups_p4_fE)")\
 	.Define("ups_phi", "ComputePhi(ups_p4_fX, ups_p4_fY, ups_p4_fZ, ups_p4_fE)")\
 	.Define("ups_rap", "ComputeRapidity(ups_p4_fX, ups_p4_fY, ups_p4_fZ, ups_p4_fE)")\
@@ -20,7 +21,8 @@ def UpsTreeDefinitions (dataframe):
 	.Define("ups_deltaR", "sqrt(ups_deltaEta*ups_deltaEta + ups_deltaPhi*ups_deltaPhi)")
 	
 def CandTreeDefinitions (dataframe):
-	return dataframe.Define("ditrack_mass", "sqrt(ditrack_p4_fE*ditrack_p4_fE - ditrack_p4_fX*ditrack_p4_fX - ditrack_p4_fY*ditrack_p4_fY - ditrack_p4_fZ*ditrack_p4_fZ)")\
+	return dataframe\
+	.Define("ditrack_mass", "sqrt(ditrack_p4_fE*ditrack_p4_fE - ditrack_p4_fX*ditrack_p4_fX - ditrack_p4_fY*ditrack_p4_fY - ditrack_p4_fZ*ditrack_p4_fZ)")\
 	.Define("dimuon_mass", "sqrt(dimuon_p4_fE*dimuon_p4_fE - dimuon_p4_fX*dimuon_p4_fX - dimuon_p4_fY*dimuon_p4_fY - dimuon_p4_fZ*dimuon_p4_fZ)")\
 	.Define("track1_pT", "sqrt(track1_p4_fX*track1_p4_fX + track1_p4_fY*track1_p4_fY)")\
 	.Define("track1_eta", "ComputePseudoRapidity(track1_p4_fX, track1_p4_fY, track1_p4_fZ, track1_p4_fE)")\

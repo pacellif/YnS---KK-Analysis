@@ -1,4 +1,4 @@
-print("\n^^^^^ Y(2S)->µµ + Phi->KK SPECTRUM ANALYSER ^^^^^\n\nImporting modules...")
+print("\n^^^^^^^^\tY(2S)->µµ + Phi->KK SPECTRUM ANALYSER\t^^^^^^^^\n\nImporting modules...")
 
 import ROOT 
 from time import time
