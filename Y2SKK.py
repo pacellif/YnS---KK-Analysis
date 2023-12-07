@@ -15,17 +15,46 @@ ROOT.gROOT.SetBatch(True)
 # comando scp per copiare macro in account remoto
 # cambiare il path per aprire i file
 
+#ROOT.ROOT.EnableImplicitMT(4)
 
-#	PLOT TEMPLATE	-------------------------------------------------|
-def cprint (hist, name, opt="", stats=False, x=300,y=200):
+
+#	FILE MANAGEMENT:	---------------------------------------------| 
+#	- open .root dataset: it is possible to select a subset
+#	- make custom directories in which store plots and .root files
+
+with open('Y2SPhiRun2List.txt') as f:
+    allFiles = f.readlines()
+
+for i in range(len(allFiles)):			
+    allFiles[i] = allFiles[i].replace("\n", "")
+
+
+#		trees reading - using command line arguments
+
+d = "test"
+try: 
+	sample = allFiles[:int(argv[1])] 
+except IndexError:
+	sample = allFiles[:]
+except ValueError:
+	sample = allFiles[:]
+	d = argv[1]
+											
+if not os.path.isdir(f"./{d}/"):			
+	os.system(f"mkdir {d}")	
+
+
+
+#	plot template	-------------------------------------------------|
+def cprint (hist, name, opt="", stats=False):
 	title= "Y2S "+name
-	c = ROOT.TCanvas(title, title, x, y)
+	c = ROOT.TCanvas(title, title)
 	
 	if stats==False: hist.SetStats(0)
 	hist.Draw(opt)
 		
-	c.SaveAs("ups_plots/"+name+".pdf")
-	os.system("xdg-open ups_plots/"+name+".pdf")
+	c.SaveAs(d+"/"+name+".pdf")
+	os.system(f"xdg-open {d}/"+name+".pdf")
 #------------------------------------------------------------------
 def binCount (var, rangeName):
 	varBinning = var.getBinning()
@@ -35,27 +64,12 @@ def binCount (var, rangeName):
 	return nbins
 #------------------------------------------------------------------	
 
-#ROOT.ROOT.EnableImplicitMT(4)
-
-with open('Y2SPhiRun2List.txt') as f:
-    allFiles = f.readlines()
-
-for i in range(len(allFiles)):			
-    allFiles[i] = allFiles[i].replace("\n", "")
-
-
-#	TREES READING - using command line arguments
-try: 
-	sample = allFiles[:int(argv[1])] 
-except IndexError:
-	sample = allFiles[:]
-
 
 print("Creating Dataset...")
 dataY2S = UpsTreeDefinitions(ROOT.RDataFrame("rootuple/UpsTree",sample))
 
 
-fileroot = ROOT.TFile.Open("ups_plots/ups_mass.root","RECREATE")
+fileroot = ROOT.TFile.Open("ups_mass.root","RECREATE")
 
 
 #	MUON TRANSVERSE MOMENTUM
@@ -81,9 +95,9 @@ def mu_pt():
 	hist2.Draw()
 
 
-	c.SaveAs("ups_plots/muonPTdistribution.pdf")
+	c.SaveAs(d+"/muonPTdistribution.pdf")
 	fileroot.WriteObject(c,"MuonPT")
-	os.system("xdg-open ups_plots/muonPTdistribution.pdf")
+	os.system(f"xdg-open {d}/muonPTdistribution.pdf")
 
 ######	   MASS PLOT	#########
 
@@ -119,38 +133,39 @@ def fit_Y2S():
 	# mass Y2S PDG = 10.02326
 	# mass Y3S PDG = 10.35520
 
-		#mean of signal
-	mean2s = ROOT.RooRealVar("#mu_{Y(2S)}", "mean of gaussians", 10., 9.8, 10.2)
+		#signal mean
+	mean2s = ROOT.RooRealVar("#mu_{Y(2S)}", "mean of gaussians", 
+							  10., 9.8, 10.2)
 
-		#sigma
-	sigma2s = ROOT.RooRealVar("#sigma^{Y(2S)}", "width1", 0.063, 0.01, 5.) 
-
-		#CrystalBall parameters
+		#sigmas
+	sigma2s = ROOT.RooRealVar("#sigma_{Y(2S)}", "width", 0.063, 0.01, 5.) 
+		
+		#Crystal Ball parameters
 	alpha = ROOT.RooRealVar ("alpha","alpha", 1.62, 0., 5.)
-	n= ROOT.RooRealVar ("n","n", 0.1, -1., 1.)
+	n= ROOT.RooRealVar ("n","n", 0.1, -1., 1.);
 
 		#chebychev coefficients
 	f0 = ROOT.RooRealVar("f0", "f0", 5., 0., 10.)
-	f1 = ROOT.RooRealVar("f1", "f1", -1., -100., 0)
+	f1 = ROOT.RooRealVar("f1", "f1", 0., -20., 1.)
 	f2 = ROOT.RooRealVar("f2", "f2", 2., 0., 8.)
 		
-		#bkg normalization fraction
-	bkgfrac = ROOT.RooRealVar("f_{bkg}", "fraction of background", 0.02, 0.001, 1.)
+		#fractions
+	bkgfrac = ROOT.RooRealVar("f_{bkg}", "fraction of background", 0.5, 0.001, 1.)
 
-	# 		MODELS FOR MASS PLOT
+	# 	MODELS FOR MASS PLOT
 
 		#signals
-	sig2s = ROOT.RooGaussian("signal2s", "signal2s", upsmass, mean2s, sigma2s)
-	cb = ROOT.RooCBShape("Double CB", "#upsilon(2s) Pdf", upsmass, mean2s, sigma2s, alpha, n)
+	sig2s1 = ROOT.RooGaussian("signal2s_1", "signal2s_1", upsmass, mean2s, sigma2s)
+	cb = ROOT.RooCBShape("Double CB", "#upsilon(2s) Pdf", upsmass, mean2s, sigma2s, alpha, n);
 		
 		#backgrounds
 	bkg2 = ROOT.RooChebychev("bkg", "Background", upsmass, ROOT.RooArgList(f0,f1))
 	bkg3 = ROOT.RooChebychev("bkg", "Background", upsmass, ROOT.RooArgList(f0,f1,f2))
 
 		#MODELS
-	model1 = ROOT.RooAddPdf("model1", "Cheb2+Gaus", [bkg2,sig2s], [bkgfrac]) 
+	model1 = ROOT.RooAddPdf("model1", "Cheb2+Gaus", [bkg2,sig2s1], [bkgfrac]) 
 	model2 = ROOT.RooAddPdf("model2", "Cheb2+CB", [bkg2,cb], [bkgfrac]) 
-	model3 = ROOT.RooAddPdf("model3", "Cheb3+Gaus", [bkg3,sig2s], [bkgfrac]) 
+	model3 = ROOT.RooAddPdf("model3", "Cheb3+Gaus", [bkg3,sig2s1], [bkgfrac]) 
 	model4 = ROOT.RooAddPdf("model4", "Cheb3+CB", [bkg3,cb], [bkgfrac]) 
 
 	allModels = [model1, model2, model3, model4]
@@ -199,8 +214,8 @@ def fit_Y2S():
 	xframe.pullHist().Draw()	#pull histogram
 
 	fileroot.WriteObject(c,"UpsInvMass")
-	c.SaveAs("ups_plots/MassPlotY2S.pdf")
-	os.system("xdg-open ups_plots/MassPlotY2S.pdf")
+	c.SaveAs(d+"/MassPlotY2S.pdf")
+	os.system(f"xdg-open {d}/MassPlotY2S.pdf")
 
 
 #######		TRANSVERSAL MOMENTUM PLOTS	#############
@@ -223,8 +238,8 @@ def Y_pt():
 	hist17.Draw("same")
 	hist16.Draw("same")
 
-	c_pt.SaveAs("ups_plots/pt.pdf")
-	os.system("xdg-open ups_plots/pt.pdf")
+	c_pt.SaveAs(d+"/pt.pdf")
+	os.system(f"xdg-open {d}/pt.pdf")
 
 
 ###########		PROBABILITY PLOT	###############
@@ -235,8 +250,8 @@ def Y_vProb():
 	c_p = ROOT.TCanvas("Y2S prob", "Y2S prob")
 	
 	p_hist.Draw()
-	c_p.SaveAs("ups_plots/prob.pdf")
-	os.system("xdg-open ups_plots/prob.pdf")
+	c_p.SaveAs(d+"/prob.pdf")
+	os.system(f"xdg-open {d}/prob.pdf")
 
 
 ##########		RAPIDITY PLOT	###########
@@ -258,8 +273,8 @@ def Y_rap():
 	hist17.Draw("same")
 	hist16.Draw("same")
 
-	c_rap.SaveAs("ups_plots/rapidity.pdf")
-	os.system("xdg-open ups_plots/rapidity.pdf")
+	c_rap.SaveAs(d+"/rapidity.pdf")
+	os.system(f"xdg-open {d}/rapidity.pdf")
 
 
 #	PSEUDRAPIDITY PLOT	##############################
@@ -281,8 +296,8 @@ def Y_pseudorap():
 	hist17.Draw("same")
 	hist16.Draw("same")
 
-	c.SaveAs("ups_plots/Pseudorapidity.pdf")
-	os.system("xdg-open ups_plots/Pseudorapidity.pdf")
+	c.SaveAs(d+"/Pseudorapidity.pdf")
+	os.system(f"xdg-open {d}/Pseudorapidity.pdf")
 
 
 

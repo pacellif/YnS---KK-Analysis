@@ -11,9 +11,9 @@ ROOT.gROOT.SetBatch(True)
 
 
 #	PLOT TEMPLATE
-def cprint (hist, name, opt="", stats=False, x=300,y=200):
+def cprint (hist, name, opt="", stats=False):
 	title= "Y2S "+name
-	c = ROOT.TCanvas(title, title, x, y)
+	c = ROOT.TCanvas(title, title)
 	
 	if stats==False: hist.SetStats(0)
 	hist.Draw(opt)
@@ -48,7 +48,7 @@ if not os.path.isdir(f"./{d}/"):
 	os.system(f"mkdir {d}")							
 
 # create a root file to store and edit plots, if necessary											
-p = ROOT.TFile.Open(d+"/h.root","RECREATE")		
+p = ROOT.TFile.Open(d+"/cand.root","RECREATE")		
 												
 
 # creating datasets for the analysis		
