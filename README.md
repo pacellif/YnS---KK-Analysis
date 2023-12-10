@@ -12,21 +12,20 @@ The .root files are read with two scripts: `Y2SKK.py` and `CandAnalysis.py`, whi
 ```
 python3 <script_name>.py
 ```
-
-Each script opens one of the two trees which are present in the rootuple:
+Each script opens one of the two trees which are present in the rootuple and builds a **RDataFrame**:
 
 - The `UpsTree`, which stores the kinematics of the Y(2S) and of each of its daughter muons.
 - The `CandidateTree`, which stores the kinematics of the single muon, their combination (dimuon), the single tracks, their combination (ditrack), and the total candidate. 
 
-
-
-The 
-
 Other `.py` files are modules where some definitions of functions are stored:
-- In `declarations.py` some 
-`Y2SPhiRun2List.txt` contains the full paths of all the rootuples: since I downloaded the whole dataset on a hard disk, I filled the file by command-line using
+- In `declarations.py`, some algebric functions are defined in order to compute physically relevant quantities for the analysis, i. e. `ComputePseudoRapidity()`. They are defined directly using the `ROOT.gInterpreter()`
+- In `definitions.py`, new columns are defined in the RDataFrame through the method `Define()`, in order to enrich the analysis.
 
+`Y2SPhiRun2List.txt` contains the full paths of all the rootuples: since I downloaded the whole dataset on a hard disk, I filled the file by command-line using
 ```
 ls path/to/hard/disk/*.root > Y2SPhiRun2List.txt
 ```
+
+## Structure of the code
+
 
