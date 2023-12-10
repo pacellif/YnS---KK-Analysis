@@ -1,6 +1,6 @@
 # Y(2S)+Phi Spectrum Analysis
 
-In this framework I am presenting the script I wrote for an analysis about the searching of possible resonances in the spectrum of the Y(2S) → µµ + Phi → KK. 
+In this framework I am presenting the script I wrote for an analysis about the searching of possible resonances in the spectrum of the $\Upsilon(2S) → \mu\mu + \Phi → KK$. 
 All data was collected at CMS during the Run2 is from the _MuOnia_ dataset. 
 The latter contains all the event collections which are useful to detect the production of quarkonium states (such as J/Psi, Y, etc.) through the reconstruction of dimuons. 
 In particular, dimuons in the range of Y(2S) are selected, then ditracks were attached to form the Candidate. 
