@@ -1,6 +1,6 @@
-# $\Upsilon(2S)$+$\Phi$ Spectrum Analysis
+# $\Upsilon(2S)$+$\phi$ Spectrum Analysis
 
-In this framework I am presenting the script I wrote for an analysis about the searching of possible resonances in the spectrum of the $\Upsilon(2S) \rightarrow \mu\mu + \Phi \rightarrow KK$. 
+In this framework I am presenting the script I wrote for an analysis about the searching of possible resonances in the spectrum of the $\Upsilon(2S) \rightarrow \mu\mu + \phi \rightarrow KK$. 
 All data was collected at CMS during the Run2 is from the _MuOnia_ dataset. 
 The latter contains all the event collections which are useful to detect the production of quarkonium states (such as $J/\Psi$, $\Upsilon$, etc.) through the reconstruction of dimuons. 
 In particular, dimuons in the range of $\Upsilon(2S)$ are selected, then ditracks were attached to form the Candidate. 
@@ -30,7 +30,7 @@ ls path/to/hard/disk/*.root > Y2SPhiRun2List.txt
 
 Each of the two macro can be divided in three parts:
 1. The first one includes the importation of libraries and modules, opens the .root files and builds the RDataFrame.
-2. The second part contains the definition of functions which will draw and save all the plots for the analysis.
+2. The second part contains the definition of functions which will draw and save all the plots for the analysis (_plot functions_).
 3. In the last part, it is implemented an interface that allows to choose which plots to print.
 
 ### 1. Starting
@@ -39,17 +39,37 @@ The libraries and modules imported by the program there are
 ```
 import ROOT 
 import os
-from time import time	#to get the computing time
-from sys import argv	#to pass arguments by command line
-from definitions import UpsTreeDefinitions #or CandTreeDefinitions for the other script
+from time import time						#to get the computing time
+from sys import argv						#to pass arguments by command line
+from definitions import UpsTreeDefinitions	#or CandTreeDefinitions for the other script
 import declarations
 ```
+Right after, the `Y2SPhiRun2List.txt` is read, and all its lines are trimmed and stored in a list.
+In order to execute only a sample of the whole dataset and speed up the debugging of the code or the correction of the plots, it is possible to pass an integer _N_ as command line argument, selecting the first _N_ .root files to open. At the end of the program, all the saved plots are stored in a directory named "test".
 
-I imported the `time` function because I was interested in the computing time. In addition, the `argv` list was very useful to run the script by inserting two different arguments from command line:
-- an integer, corresponding to the number of .root files to open, in order to execute only a sample of the whole dataset, and speed up the debugging of the code or the correction of the plots
-- a string, corresponding to the name of the folder of storage of the plots
+Alternatively, a string can be passed as command line argument, as the name of a different storing folder for the plots. This option is meant to be chosen when the code is correclty working and ready to analyse the whole dataset.
 
-If the argument is a number, the plots are automatically stored in a folder named "test", while if it is a string, the whole dataset is passed in the RDataFrame constructor.
+At this point, the sample of rootuples is passed as argument of RDataFrame constructor. Together with the dataframe, a TFile is opened to save the most elaborated plots, so that it is possible to access and edit them through the TBrowser or by the line command `rootbrowse <fileroot>.root`.
+
+In the end, I imported the `time` function because I was interested in the computing time.
+### 2. The core
+
+In the middle part of the code, the plot functions are defined. 
+
+I implemented a standard function `cprint` to simply draw and save a histogram which plots one of the columns of the dataframe.
+
+In general, histograms were made using the method `Histo1D` or `Histo2D` of the RDataFrame, while to perform the fit of a histogram.
+
+
+---
+Describe all the functions for every script
+---
+
+### 3. The interface
+
+The interface is designed to allow the user to select which plots to work on. A menu is printed on the terminal at the beginning of the execution, displaying the keys to digit to select the plots. It is possible to choose multiple plots by separating the keys with space.
+The keys are collected in a dictionary and call the respective function in a for loop. In case there is a non-valid key inserted, it is possible to correct it thanks to a while loop.
+
 
 
 

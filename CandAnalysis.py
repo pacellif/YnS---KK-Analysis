@@ -25,6 +25,7 @@ def cprint (hist, name, opt="", stats=False):
 
 with open('Y2SPhiRun2List.txt') as f:
     allFiles = f.readlines()
+    f.close()
 
 for i in range(len(allFiles)):			
     allFiles[i] = allFiles[i].replace("\n", "")
@@ -289,52 +290,47 @@ def mumukk(zoom = False):
 		c0.Draw("")
 		c0.SaveAs(d+"/PhiCandidateZoom.pdf")
 		os.system(f"xdg-open {d}/PhiCandidateZoom.pdf")
-"""
-def mumupipi():
 
-	mass_constraint_selection = ymumu_filter+phiKKSelection+ " &  mumupipi_mcmass > 11. & mumupipi_mcmass < 11.4"
-
-	hist0 = dataKKrs.Filter(ymumu_filter + phiKKSelection).Histo1D(("MuMuPiPi cands", "Y(2S)(#rightarrow #mu^{+}#mu^{-})#phi(#rightarrow #pi^{+}#pi^{-});m(#mu#mu#pi#pi) - m(#mu#mu) + m^{PDG}(Y) [GeV];Counts", 200, edge[0], edge[1]), "candidate_vMass")
-	hist1 = dataKKws.Filter(ymumu_filter + phiKKwsSelection).Histo1D(("MuMuPiPi cands", "Y(2S)(#rightarrow #mu^{+}#mu^{-})#phi(#rightarrow #pi^{+}#pi^{-});m(#mu#mu#pi#pi) - m(#mu#mu) + m^{PDG}(Y) [GeV];Counts", 200, edge[0], edge[1]), "candidate_vMass")
-
-	c0 = ROOT.TCanvas()
-
-	hist0.SetStats(0)
-
-	hist0.SetLineColor(1)
-	hist1.SetLineColor(2)
-
-	legend = ROOT.TLegend(0.7, 0.1, 0.89, 0.3) #(xmin,ymin,xmax,ymax)
-
-	legend.AddEntry(hist0.GetPtr(), "RS pions", "l")
-	legend.AddEntry(hist1.GetPtr(), "WS pions (norm)", "l")
-
-	hist1.Scale(hist0.Integral()/hist1.Integral())
-	        
-	hist0.Draw("")
-	hist1.Draw("same")
-	legend.Draw("")
-	c0.Draw("")
-	c0.SaveAs(d+"/Phi_pipi.pdf")
-	os.system(f"xdg-open {d}/Phi_pipi.pdf")
-	
-	p.WriteObject(c0,"phi_pipi")
-"""
-	
 #	MENU
+
+compute = {	"1" : kaonL_pt,
+			"2" : kaonS_pt,
+			"3" : m_kk,
+			"4" : m_kk_fit,		
+			"5" : mumukk,		
+			"6" : mumukk,
+			"q" : exit
+		  }
+
+
 lang = input("\nSelect plots (Separate by spacing):\n1. Leading Kaon pt\n2. Soft Kaon pt\n3. KK invariant mass (with K_pt cuts)\n4. Fit KK invariant mass\n5. Phi Candidate plot\n6. Phi candidate plot with Zoom\nENTER: 1-5 Plots\nPress \"q\" to EXIT.\n").split()
 
-print("Processing...")
+if "q" not in lang:
+	print("Processing...") 
 
 	# Start timer
 start = time()
-if not lang:
-#print all plots
+
+if not lang:	#print all plots		
+	for func in compute.values() : func()
+
+else:			#print only selected-by-key plots
+	for i in lang: 
+	
+		while i not in compute.keys(): 	#in case of multiple misdigit
+			i = input(f"\"{i}\" is not valid. Please insert a valid key:\n")
+		
+		if i != "6" : compute[i]()
+		else : compute[i](zoom = True)
+
+"""
+if not lang:	#print all plots
+
 		kaonL_pt()
 		kaonS_pt()
 		m_kk()					
-		m_kk_fit()				#save to .root
-		mumukk()				#save to .root
+		m_kk_fit()			#save to .root
+		mumukk()			#save to .root
 else:
 	for i in lang:
 		match i:
@@ -357,7 +353,7 @@ else:
 				print("Not valid")
 				exit()
 
-
+"""
 	# End timer
 end = time()
 

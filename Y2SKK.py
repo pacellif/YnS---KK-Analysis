@@ -24,6 +24,7 @@ ROOT.gROOT.SetBatch(True)
 
 with open('Y2SPhiRun2List.txt') as f:
     allFiles = f.readlines()
+    f.close()
 
 for i in range(len(allFiles)):			
     allFiles[i] = allFiles[i].replace("\n", "")
@@ -319,51 +320,40 @@ def dimuon_decay():
 	
 
 
-#	MENU	
+#	MENU
+
+#	call functions by inserting the key from command line
+compute = {	"1" : mu_pt,
+			"2" : m_Y2S,
+			"3" : fit_Y2S,
+			"4" : Y_pt,		
+			"5" : Y_vProb,		
+			"6" : Y_rap,
+			"7" : Y_pseudorap,
+			"8" : dimuon_decay,
+			"q" : exit
+		  }
+
+	
 lang = input("\nSelect plots (Separate by spacing):\n1. Single Muon pT Plot\n2. Y(2S) Mass Plot\n3. Fit of Y(2S) Mass Plot\n4. Y(2S) pT\n5. Y(2S) Vertex Probability\n6. Y(2S) Rapidity\n7. Y(2S) Pseudorapidity\n8. Plots for Geometry of Di-Muon Decay\nENTER to print all plots.\nPress \"q\" to EXIT.\n").split()
 
 if "q" not in lang:
 	print("Processing...") 
 	
+
 	# Start timer
 start = time()
 
 if not lang:	#print all plots		
+	for func in compute.values() : func()
 
-	mu_pt()
-	m_Y2S()
-	fit_Y2S()
-	Y_pt()		
-	Y_vProb()		
-	Y_rap()
-	Y_pseudorap()
-	dimuon_decay()
+else:			#print only selected-by-key plots
+	for i in lang: 
 	
-else:
-	for i in lang:
-		match i:
-			case "1":
-				mu_pt()
-			case "2":
-				m_Y2S()
-			case "3":
-				fit_Y2S()
-			case "4":
-				Y_pt()		
-			case "5":
-				Y_vProb()
-			case "6":		
-				Y_rap()
-			case "7":		
-				Y_pseudorap()
-			case "8":		
-				dimuon_decay()
-			case "q":
-				print ("Bye Bye")
-				exit()
-			case _:
-				print("Not valid")
-				exit()
+		while i not in compute.keys(): 	#in case of multiple misdigit
+			i = input(f"\"{i}\" is not valid. Please insert a valid key:\n")
+		
+		compute[i]()
 
 
 	# End timer
