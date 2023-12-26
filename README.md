@@ -2,15 +2,21 @@
 
 In this framework I am presenting the script I wrote for an analysis about the searching of possible resonances in the spectrum of the $\Upsilon(2S) \rightarrow \mu\mu + \phi \rightarrow KK$. 
 All data was collected at CMS during the Run2, elaborated and stored in the _MuOnia_ dataset. 
-The latter contains all the event collections which are useful to detect the production of quarkonium states (such as $J/\Psi$, $\Upsilon$, etc.) through the reconstruction of dimuons. 
-In particular, dimuons in the range of $\Upsilon(2S)$ are selected, then ditracks were attached to form the *candidate*. 
-The CMSSW producer is responsible for this process and store all the objects involved, then CMSSW rootupler unpacks the kinematic quantities and vertex information. 
+The latter contains all the event collections which are useful to detect the production of quarkonium states ($J/\Psi$, $\Upsilon$, etc.) through the reconstruction of dimuons. 
+In particular, dimuons in the range of $\Upsilon(2S)$ are selected, as it is done for ditracks in range of $\phi$. Then, all these objects were attached together to form the *candidate*. 
+The CMSSW producer is responsible for this process and save all the objects involved, then CMSSW rootupler unpacks the kinematic quantities and vertex information in a .root file. 
 
-This tool provides a large variety of plots that simply describe distributions of specific quantities (such as $p_T$, pseudorapidity and more) or allow to work on the mass spectra of the particle involved in the study.
+This tool reads the rootuples and provides a large variety of plots that simply show distributions of specific quantities (such as $p_T$, pseudorapidity and more) or allow to work on the mass spectra of the $\Upsilon$, the $\phi$ and of the whole candidate.
 
-![Ymass](https://upload.wikimedia.org/wikipedia/commons/e/e0/Upsilon_mesons_CMS.svg)
+The spectrum in *Figure 1* represents the first three excited states of $\Upsilon$, for which I will focus only on the second peak. The $\phi$ spectrum is extracted from the ditrack, which are assumed to be pairs of $K^+K^-$, since CMS can not do PID for this kind of objects. In *Figure 2* there is an example of plot.
 
-## Requirements
+![YMass](https://upload.wikimedia.org/wikipedia/commons/e/e0/Upsilon_mesons_CMS.svg)
+*Figure 1: $\Upsilon$ spectrum from the dimuon invariant mass*
+
+![PhiMass](https://www.science20.com/files/images/phicms.png)
+*Figure 2: $\phi$ spectrum from the ditrack invariant mass. In the framework, ditracks are assumed to be Kaons.*
+
+### Requirements
 
 In order to be able to run the scripts it is necessary to have installed ROOT, with the PyROOT module and Python v3.
 
