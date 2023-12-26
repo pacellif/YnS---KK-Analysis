@@ -1,13 +1,15 @@
 print("\n^^^^^^^^\tY(2S)->µµ + Phi->KK SPECTRUM ANALYSER\t^^^^^^^^\n\nImporting modules...")
 
-import ROOT 
+import ROOT
+ROOT.gROOT.SetBatch(True)
+
 from time import time
 import os
 from sys import argv
 from definitions import CandTreeDefinitions
 import declarations
 
-ROOT.gROOT.SetBatch(True)
+
 
 
 #	PLOT TEMPLATE
@@ -72,25 +74,14 @@ dataKKws = dataY2SKK.Filter("track1_charge * track2_charge > 0")
 #	DEFINING DIFFERENT PLOTS
 """
 #	MASS PLOT OF CANDIDATE	##############################
-	# Start timer
-start = time()
-
-YKKMass = ROOT.RooRealVar("YKKMass", "YKKMass", 11, 13.5)
-YKKMass.setBins(1000)
-rooDataSetYKK = dataY2SKK.Book(ROOT.std.move(ROOT.RooDataSetHelper("dataset", "Title of dataset", ROOT.RooArgSet(YKKMass))), ["candidate_vMass"])
-Cand_frame = YKKMass.frame(Title="Y(2S)KK Mass")
-rooDataSetYKK.plotOn(Cand_frame,LineColor="b",MarkerSize=0.3)
-
-c_Cand = ROOT.TCanvas("MassPlotY2SKK", "MassPlotY2SKK", 800, 400)
-Cand_frame.Draw()
-c_Cand.SaveAs("phikk_plots/MassPlotY2SKK.pdf")
-
+	
 	#candidate mass
 hist = dataY2SKK.Histo1D(("Candidate Mass", "Candidate Mass; m(K^{L})+m(K^{S})+ m(Y(2S))[GeV/c^{2}];Counts", 500, 11., 13.6), "candidate_vMass")
-cprint(hist, "phikk_plots/candidateMass")
+cprint(hist, d+"/candidateMass")
+
 	#dimuon mass
 hist = dataY2SKK.Histo1D(("Dimuon Mass", "Candidate Mass; m[GeV/c^{2}];Counts", 500, 9.4, 10.5), "dimuon_vMass")
-cprint(hist, "phikk_plots/dimuonMass", stats=True)
+cprint(hist, d+"/dimuonMass", stats=True)
 """
 
 #	LEADING KAON PT PLOT
@@ -149,10 +140,13 @@ def m_kk():
 
 #	FIT OF KK_PT CUT	#####################
 #	take the cut pt_kL > 1.2 and pt_kS > 1.0
+def quadrature (a,b):
+	return pow( (pow(a,2) + pow(b,2)), 0.5 )
 
 def m_kk_fit(ptL = 1.2, ptS = 1.0):
 	dfkk = dataKKrs.Filter(f"trackL_pT > {ptL} & trackS_pT > {ptS}")\
 	.Filter("ditrack_mass > 1.0 & ditrack_mass < 1.04")\
+	.Filter("track1_pvAssocQ + track2_pvAssocQ > 11")\
 	.AsNumpy(columns=["ditrack_mass"])
 		
 		#variable
@@ -160,24 +154,35 @@ def m_kk_fit(ptL = 1.2, ptS = 1.0):
 
 	kkroodata = ROOT.RooDataSet.from_numpy({"ditrack_mass": dfkk["ditrack_mass"]}, [kkmass])
 	kkroohist = kkroodata.binnedClone()
+	
+		#	Number of entries
+	entries = kkroohist.sumEntries()
+	
+		#	Create frame
 	phiframe = kkmass.frame(Title="Dikaon Candidate Mass")
 
 	
-		#model
+		#	Signal parameters
 	mean = ROOT.RooRealVar("#mu_{#phi}", "mean of gaussian", 1.019, 1.018, 1.020) #mean value, min value, max value
 	sigma = ROOT.RooRealVar("#sigma_{#phi}", "resolution", 0.00125, 0.001, 0.002) 
-	sigma.setConstant(1)		# fixed res from MC????????
 	width = ROOT.RooRealVar("#Gamma_{#phi}", "width", 0.00439, 0.003, 0.006)
+	
+	sigma.setConstant(1)		# fixed res from MC????????
 
+		#	Chebyshev coefficients
 	f0 = ROOT.RooRealVar("f0", "f0", +0.2, -1, +1)
 	f1 = ROOT.RooRealVar("f1", "f1", -0.05, -1, +1)
 
-	bkgfrac = ROOT.RooRealVar("f_{bkg}", "fraction of background", 0.92, 0.8, 1.0)
+		#	Number of events
+	Nbkg = ROOT.RooRealVar("N_{bkg}", "N bkg events", 50, 0., entries)
+	Nsig = ROOT.RooRealVar("N_{sig}", "N sig events", 50, 0., entries)
 
+		#	Model Functions
 	sig = ROOT.RooVoigtian("signal", "signal", kkmass, mean, width, sigma)
-	bkg = ROOT.RooChebychev("bkg", "Background", kkmass, [f0, f1]) ## to increase the degree, just increase the coefficients
+	bkg = ROOT.RooChebychev("bkg", "Background", kkmass, [f0, f1]) 
 
-	model = ROOT.RooAddPdf("model", "voigt+cheb", [bkg, sig], [bkgfrac])
+		#	Total model
+	model = ROOT.RooAddPdf("model", "voigt+cheb", [bkg, sig], [Nbkg, Nsig])
 		
 	model.fitTo(kkroohist)
 		
@@ -188,10 +193,21 @@ def m_kk_fit(ptL = 1.2, ptS = 1.0):
 	model.plotOn(phiframe) # By default only fitted range is shown
 	model.plotOn(phiframe, Components={sig}, LineStyle=":", LineColor="r")
 	model.plotOn(phiframe, Components={bkg}, LineStyle=":", LineColor="g")
-	model.paramOn(phiframe, ROOT.RooFit.Parameters([mean, width, bkgfrac]), ROOT.RooFit.Layout(0.65, 0.9, 0.9))
+	model.paramOn(phiframe, ROOT.RooFit.Parameters([mean, width, Nbkg, Nsig]), ROOT.RooFit.Layout(0.65, 0.9, 0.9))
 
-	xmin = mean.getVal() - width.getVal()
-	xmax = mean.getVal() + width.getVal()
+	xmin = mean.getVal() - 2*quadrature(width.getVal()/2, sigma.getVal())
+	xmax = mean.getVal() + 2*quadrature(width.getVal()/2, sigma.getVal())
+
+	
+	kkmass.setRange("window", xmin,xmax)
+	S = sig.createIntegral(kkmass, Range="window").getVal() #NOT WORKING!!
+	
+	#kkmass.setVal(1.002)
+	#x= kkmass.getVal()
+	#y = sig.getVal()
+	
+	#print (f"\nthe evaluated signal is {y} in x={x}\n")
+	print (f"\nthe entries are {S}\n")
 
 	line0 = ROOT.TLine(xmin, 0., xmin, 10000)
 	line1 = ROOT.TLine(xmax, 0., xmax, 10000)
@@ -217,21 +233,31 @@ def m_kk_fit(ptL = 1.2, ptS = 1.0):
 	elapsed = end - start
 	print("\nTime for Phi mass plot: ", elapsed, "\n") 
 
-
+#	c = ROOT.TCanvas()
+#	bkg_split = kkroohist.split(bkg)
+#	bkg_split.Draw()
+#	c.Draw()
+#	c.SaveAs(d+"/PhiMassPlotSignal.pdf")
+#	os.system(f"xdg-open {d}/PhiMassPlotSignal.pdf")
+	
 # PHI CANDIDATE PLOT	
-#ws=wrong sign (take K+K+ and K-K-)
+#ws = wrong sign (take K+K+ and K-K-)
 #compare the selection distribution with one random distribution
 
 
 	#Γ φ = 0.00446 ± 0.00018
 	#μφ  = 1.019445 ± 0.000036
+	
+	#	Y mass cuts: µ ± 2 sigma 
+	#	φ mass cuts: µ ± 2 Sigma
 
-ymumu_filter="dimuon_mass > 9.8 & dimuon_mass < 10.15 & dimuon_pT > 18 & "
+ymumu_filter= "dimuon_mass > 9.881 & dimuon_mass < 10.147 & dimuon_pT > 18 & "
 phiKKSelection = '''candidate_vProb > 0.1 &
 ditrack_mass > 1.0150 &
 ditrack_mass < 1.0239 &
 trackL_pT > 1.0 & 
 trackS_pT > 0.8'''
+quality_filter = " & track1_pvAssocQ + track2_pvAssocQ > 11"
 
 
 # ditrack mass: interval of phi rest mass
@@ -248,7 +274,9 @@ os.system(f"echo \"{tagli}\nbinning: {binning}\" > {d}/tagli.txt")
 
 #histograms
 def mumukk(zoom = False):
+
 	hist0 = dataKKrs.Filter(ymumu_filter + phiKKSelection).Histo1D(("MuMuKK cands", "Y(2S)(#rightarrow #mu^{+}#mu^{-})#phi(#rightarrow K^{+}K^{-});m(#mu#muKK) - m(#mu#mu) + m^{PDG}(Y) [GeV];Counts", binning, edge[0], edge[1]), "candidate_vMass")
+	
 	hist1 = dataKKws.Filter(ymumu_filter + phiKKSelection).Histo1D(("MuMuKK cands", "Y(2S)(#rightarrow #mu^{+}#mu^{-})#phi(#rightarrow K^{+}K^{-});m(#mu#muKK) - m(#mu#mu) + m^{PDG}(Y) [GeV];Counts", binning, edge[0], edge[1]), "candidate_vMass")
 
 	c0 = ROOT.TCanvas()
@@ -257,7 +285,7 @@ def mumukk(zoom = False):
 
 	hist0.SetLineColor(1)
 	hist1.SetLineColor(2)
-
+	
 	legend = ROOT.TLegend(0.7, 0.1, 0.89, 0.3) #(xmin,ymin,xmax,ymax)
 
 	legend.AddEntry(hist0.GetPtr(), "RS kaons", "l")
@@ -275,20 +303,26 @@ def mumukk(zoom = False):
 	p.WriteObject(c0,"phi_candidate")
 	
 	if zoom:
-		hist0.GetXaxis().SetRangeUser(11.3, 11.6)
-		hist1.GetXaxis().SetRangeUser(11.3, 11.6)
+
+		hist0.GetXaxis().SetRangeUser(11., 11.6)
+		hist1.GetXaxis().SetRangeUser(11., 11.6)
 		
 		hist2 = hist0
 		hist3 = hist1
 		
+		
 		hist3.Scale(hist2.Integral()/hist3.Integral())
 		
 		hist2.SetTitle("Y(2S)(#rightarrow #mu^{+}#mu^{-})#phi(#rightarrow K^{+}K^{-}) (Zoom)")
+		
 		hist2.Draw("")
 		hist3.Draw("same")
+		
 		legend.Draw("")
 		c0.Draw("")
 		c0.SaveAs(d+"/PhiCandidateZoom.pdf")
+		
+		p.WriteObject(c0,"phi_candidate(zoom)")
 		os.system(f"xdg-open {d}/PhiCandidateZoom.pdf")
 
 #	MENU
@@ -360,5 +394,8 @@ end = time()
 	# Calculate elapsed time
 elapsed = end - start
 print("\nComputing time: ", elapsed, "\n") 
-#os.system(f"echo {elapsed} > time.txt")
+
 p.Close()
+
+
+
