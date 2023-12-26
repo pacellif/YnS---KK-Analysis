@@ -1,17 +1,36 @@
-# $\Upsilon(2S)$+$\phi$ Spectrum Analysis
+# Analysis of $\Upsilon(2S)$ + $\phi$ spectrum
 
 In this framework I am presenting the script I wrote for an analysis about the searching of possible resonances in the spectrum of the $\Upsilon(2S) \rightarrow \mu\mu + \phi \rightarrow KK$. 
-All data was collected at CMS during the Run2 is from the _MuOnia_ dataset. 
+All data was collected at CMS during the Run2, elaborated and stored in the _MuOnia_ dataset. 
 The latter contains all the event collections which are useful to detect the production of quarkonium states (such as $J/\Psi$, $\Upsilon$, etc.) through the reconstruction of dimuons. 
-In particular, dimuons in the range of $\Upsilon(2S)$ are selected, then ditracks were attached to form the Candidate. 
+In particular, dimuons in the range of $\Upsilon(2S)$ are selected, then ditracks were attached to form the *candidate*. 
 The CMSSW producer is responsible for this process and store all the objects involved, then CMSSW rootupler unpacks the kinematic quantities and vertex information. 
 
-## The program
+This tool provides a large variety of plots that simply describe distributions of specific quantities (such as $p_T$, pseudorapidity and more) or allow to work on the mass spectra of the particle involved in the study.
+
+![Ymass](https://upload.wikimedia.org/wikipedia/commons/e/e0/Upsilon_mesons_CMS.svg)
+
+## Requirements
+
+In order to be able to run the scripts it is necessary to have installed ROOT, with the PyROOT module and Python v3.
+
+It is possible to download the repository from terminal with the command
+```
+git clone https://github.com/pacellif/YnS-KK-Analysis.git
+```
+
+## The framework
 
 The .root files are read with two scripts: `Y2SKK.py` and `CandAnalysis.py`, which exploit PyROOT and are executable with the version 3.10 of Python.
+
 ```
-python3 <script_name>.py
+python3 Y2SKK.py
 ```
+or 
+```
+python3 CandAnalysis.py
+```
+
 Each script opens one of the two trees which are present in the rootuple and builds a **RDataFrame**:
 
 - The `UpsTree`, which stores the kinematics of the $\Upsilon(2S)$ and of each of its daughter muons.
@@ -61,14 +80,19 @@ I implemented a standard function `cprint` to simply draw and save a histogram w
 In general, histograms were made using the method `Histo1D` or `Histo2D` of the RDataFrame, while to perform the fit of a histogram.
 
 
----
-Describe all the functions for every script
----
+
+> Describe all the functions for every script
+
 
 ### 3. The interface
 
 The interface is designed to allow the user to select which plots to work on. A menu is printed on the terminal at the beginning of the execution, displaying the keys to digit to select the plots. It is possible to choose multiple plots by separating the keys with space.
+
 The keys are collected in a dictionary and call the respective function in a for loop. In case there is a non-valid key inserted, it is possible to correct it thanks to a while loop.
+
+At the end of the last part the computing time is displayed in the terminal.
+
+## Summary and conclusions
 
 
 
