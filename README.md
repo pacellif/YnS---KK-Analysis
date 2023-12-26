@@ -11,10 +11,10 @@ This tool reads the rootuples and provides a large variety of plots that simply 
 The spectrum in *Figure 1* represents the first three excited states of $\Upsilon$, for which I will focus only on the second peak. The $\phi$ spectrum is extracted from the ditrack, which are assumed to be pairs of $K^+K^-$, since CMS can not do PID for this kind of objects. In *Figure 2* there is an example of plot.
 
 ![YMass](https://upload.wikimedia.org/wikipedia/commons/e/e0/Upsilon_mesons_CMS.svg)
-*Figure 1: $\Upsilon$ spectrum from the dimuon invariant mass*
+Figure 1: $\Upsilon$ spectrum from the dimuon invariant mass
 
 ![PhiMass](https://www.science20.com/files/images/phicms.png)
-*Figure 2: $\phi$ spectrum from the ditrack invariant mass. In the framework, ditracks are assumed to be Kaons.*
+Figure 2: $\phi$ spectrum from the ditrack invariant mass. In the framework, ditracks are assumed to be Kaons.
 
 ### Requirements
 
