@@ -9,12 +9,6 @@ from definitions import UpsTreeDefinitions
 import declarations
 
 ROOT.gROOT.SetBatch(True)
-
-
-#directory: /lustre/cms/store/user/vmastrap/MuMuKKRun2/Y2SKKfromSametV4
-# comando scp per copiare macro in account remoto
-# cambiare il path per aprire i file
-
 #ROOT.ROOT.EnableImplicitMT(4)
 
 
@@ -30,19 +24,23 @@ for i in range(len(allFiles)):
     allFiles[i] = allFiles[i].replace("\n", "")
 
 
-#		trees reading - using command line arguments
+#	TREES READING - USING COMMAND LINE ARGUMENTS
+#		it is possible to pass a number of rootuples to open 
+#		or the name of the directory where to store the plots
 
 d = "test"
 try: 
 	sample = allFiles[:int(argv[1])] 
-except IndexError:
-	sample = allFiles[:]
-except ValueError:
-	sample = allFiles[:]
+	
+except IndexError:			# in case argv[1] is empty: open all files
+ 	sample = allFiles[:]
+
+except ValueError:			# in case argv[1] is a string: open all files
+	sample = allFiles[:]	# and save them in a specific folder
 	d = argv[1]
 											
-if not os.path.isdir(f"./{d}/"):			
-	os.system(f"mkdir {d}")	
+if not os.path.isdir(f"./{d}/"):	# check if the directory exists,	
+	os.system(f"mkdir {d}")			# otherwise create one
 
 
 
@@ -64,7 +62,8 @@ def binCount (var, rangeName):
 	nbins = varBinning.binNumber(b) - varBinning.binNumber(a)
 	return nbins
 #------------------------------------------------------------------	
-
+#	OPENING THE SAMPLE
+#------------------------------------------------------------------
 
 print("Creating Dataset...")
 dataY2S = UpsTreeDefinitions(ROOT.RDataFrame("rootuple/UpsTree",sample))
@@ -72,17 +71,21 @@ dataY2S = UpsTreeDefinitions(ROOT.RDataFrame("rootuple/UpsTree",sample))
 
 fileroot = ROOT.TFile.Open("ups_mass.root","RECREATE")
 
+#------------------------------------------------------------------	
+#	DEFINITIONS OF THE PLOT FUNCTIONS
+#------------------------------------------------------------------
 
 #	MUON TRANSVERSE MOMENTUM
+
 def mu_pt():
 	hist1 = dataY2S.Histo1D(("mu1_pt Distribution", "mu1_pt Distribution;p_{T}(#mu^{+});Counts", 500, 0., 40.), "mu1_pt")
 
 	hist2 = dataY2S.Histo1D(("mu2_pt Distribution", "mu2_pt Distribution;p_{T}(#mu^{-});Counts", 500, 0., 40.), "mu2_pt")
 
-		#other two variables - same results
-	hist3 = dataY2S.Histo1D(("muonP_pT Distribution", "muonP_pT Distribution;p_{T}(#mu^{+});Counts", 500, 0., 40.), "muonP_pT")
+#		#other two variables - same results
+#	hist3 = dataY2S.Histo1D(("muonP_pT Distribution", "muonP_pT Distribution;p_{T}(#mu^{+});Counts", 500, 0., 40.), "muonP_pT")
 
-	hist4 = dataY2S.Histo1D(("muonN_pT Distribution", "muonN_pT Distribution;p_{T}(#mu^{-});Counts", 500, 0., 40.), "muonN_pT")
+#	hist4 = dataY2S.Histo1D(("muonN_pT Distribution", "muonN_pT Distribution;p_{T}(#mu^{-});Counts", 500, 0., 40.), "muonN_pT")
 
 	c = ROOT.TCanvas("Muon pT distribution", "Muon pT distribution")
 
@@ -99,28 +102,34 @@ def mu_pt():
 	c.SaveAs(d+"/muonPTdistribution.pdf")
 	fileroot.WriteObject(c,"MuonPT")
 	os.system(f"xdg-open {d}/muonPTdistribution.pdf")
+#___________________________________________________________ END OF DEF
 
-######	   MASS PLOT	#########
+#	MASS PLOT
 
 def m_Y2S():
 
 	hist = dataY2S\
-	.Filter("ups_vMass > 9.6 & ups_vMass < 10.3")\
+	.Filter("ups_vMass > 9.6 & ups_vMass < 10.3")\	#apply some filters
 	.Filter("ups_pT > 15")\
 	.Histo1D(("dimuon invariant mass", "Y(2S) #rightarrow #mu^{+}#mu^{-};m(#mu^{+}#mu^{-}) [GeV];Counts", 500, 9.6, 10.3), "ups_vMass")
+	
 	cprint(hist, "YinvMass")
+#___________________________________________________________ END OF DEF
 
-
-#	FIT		------------------------------------------------
+#	FIT	OF Y2S MASS PLOT
 	
 def fit_Y2S():	
 	
+		#	create the frame
+	
+	#	the variable
 	upsmass = ROOT.RooRealVar("ups_vMass", "m(#mu#mu) [GeV]", 9.6, 10.3)
 	upsmass.setBins(500)
 	
 	#alternatively
 	#mumuroohist = dataY2S.Book(ROOT.std.move(ROOT.RooDataSetHelper("dataset", "Title of dataset", ROOT.RooArgSet(YMass))), ["ups_vMass"])
 	
+	#	the histogram from the filtered dataset
 	massDF = dataY2S\
 	.Filter("ups_vMass > 9.6 & ups_vMass < 10.3")\
 	.Filter("ups_pT > 15")\
@@ -131,8 +140,9 @@ def fit_Y2S():
 	mumuroohist = mumuroodata.binnedClone()
 	
 	xframe = upsmass.frame(Title="Y(2S) Mass")
-	# mass Y2S PDG = 10.02326
-	# mass Y3S PDG = 10.35520
+	
+# mass Y2S PDG = 10.02326
+# mass Y3S PDG = 10.35520
 
 		#signal mean
 	mean2s = ROOT.RooRealVar("#mu_{Y(2S)}", "mean of gaussians", 
@@ -179,11 +189,11 @@ def fit_Y2S():
 		
 	fitResult = model.fitTo(mumuroohist, Range="range", Save=True)
 
-		#chi squared
-	chiSquared = int(-2 * fitResult.minNll())
-	ndof = binCount(upsmass,"range") - model.getParameters(mumuroodata).getSize()
+#		#chi squared
+#	chiSquared = int(-2 * fitResult.minNll())
+#	ndof = binCount(upsmass,"range") - model.getParameters(mumuroodata).getSize()
 
-	reducedChiSquared = round(chiSquared/ndof)
+#	reducedChiSquared = round(chiSquared/ndof)
 
 	########	PLOTTING	···········································
 	mumuroohist.plotOn(xframe,LineColor="b",MarkerSize=0.3)
@@ -198,12 +208,12 @@ def fit_Y2S():
 	
 	model.paramOn(xframe, ROOT.RooFit.Layout(0.1, 0.9, 0.9)) #print all parameters
 
-		#print chisquare
-	text_box = ROOT.TPaveText(0.65, 0.75, 0.9, 0.9, "NDC")
-	text_box.AddText( str(model.getTitle()) )	#type of fit
-	text_box.AddText(f"#chi^{2}/ndof = {reducedChiSquared}")
-	text_box.SetFillColor(0)
-	text_box.SetBorderSize(1)
+#		#print chisquare
+#	text_box = ROOT.TPaveText(0.65, 0.75, 0.9, 0.9, "NDC")
+#	text_box.AddText( str(model.getTitle()) )	#type of fit
+#	text_box.AddText(f"#chi^{2}/ndof = {reducedChiSquared}")
+#	text_box.SetFillColor(0)
+#	text_box.SetBorderSize(1)
 	
 		#print fit and pullplot
 	c = ROOT.TCanvas("MassPlotY2S", "MassPlotY2S")
@@ -217,21 +227,25 @@ def fit_Y2S():
 	fileroot.WriteObject(c,"UpsInvMass")
 	c.SaveAs(d+"/MassPlotY2S.pdf")
 	os.system(f"xdg-open {d}/MassPlotY2S.pdf")
-
+#______________________________________________________________ END OF DEF
 
 #######		TRANSVERSAL MOMENTUM PLOTS	#############
 
 
 def Y_pt():
-	hist16 = dataY2S.Filter("run < 290000").Histo1D(("Y(2S) transverse momentum", "Y(2S) transverse momentum;p_{T}(#mu#mu) [GeV];Counts", 500, 0., 50), "ups_pT")
-	hist17 = dataY2S.Filter("run < 310000").Histo1D(("Y(2S) transverse momentum", "Y(2S) transverse momentum;p_{T}(#mu#mu) [GeV];Counts", 500, 0., 50), "ups_pT")
 
-	hist18 = dataY2S.Histo1D(("Y(2S) transverse momentum", "Y(2S) transverse momentum (stacked);p_{T}(#mu#mu) [GeV];Counts", 500, 0., 50.), "ups_pT")
+		#	plot the cumulative data from 2016 to 2018
+		
+	hist16 = dataY2S.Filter("run < 290000").Histo1D(("Y(2S) transverse momentum", "Y(2S) transverse momentum;p_{T}(#mu#mu) [GeV];Counts", 500, 0., 50), "ups_pT")	#	2016 
+	
+	hist17 = dataY2S.Filter("run < 310000").Histo1D(("Y(2S) transverse momentum", "Y(2S) transverse momentum;p_{T}(#mu#mu) [GeV];Counts", 500, 0., 50), "ups_pT")	#	2017
+
+	hist18 = dataY2S.Histo1D(("Y(2S) transverse momentum", "Y(2S) transverse momentum (stacked);p_{T}(#mu#mu) [GeV];Counts", 500, 0., 50.), "ups_pT")	#	2018 
 
 	c_pt = ROOT.TCanvas("Y(2S) pT", "Y(2S) pT")
 
 
-	hist17.SetFillColor(5)
+	hist17.SetFillColor(5)		#	change color
 	hist16.SetFillColor(3)
 
 
@@ -241,11 +255,12 @@ def Y_pt():
 
 	c_pt.SaveAs(d+"/pt.pdf")
 	os.system(f"xdg-open {d}/pt.pdf")
-
+#_____________________________________________________________ END OF DEF
 
 ###########		PROBABILITY PLOT	###############
 
 def Y_vProb():
+
 	p_hist = dataY2S.Histo1D(("Y(2S) Probability", "Y(2S) Probability ;p;Counts", 500, 0., 1.), "ups_vProb")
 
 	c_p = ROOT.TCanvas("Y2S prob", "Y2S prob")
@@ -253,16 +268,19 @@ def Y_vProb():
 	p_hist.Draw()
 	c_p.SaveAs(d+"/prob.pdf")
 	os.system(f"xdg-open {d}/prob.pdf")
-
+#_____________________________________________________________ END OF DEF
 
 ##########		RAPIDITY PLOT	###########
 
 def Y_rap():
-	hist16 = dataY2S.Filter("run < 290000").Histo1D(("Y(2S) Rapidity", "Y(2S) Rapidity;y(#mu#mu);Counts", 500,-2.5,2.5), "ups_rap")
+
+		#	plot the cumulative data from 2016 to 2018
+
+	hist16 = dataY2S.Filter("run < 290000").Histo1D(("Y(2S) Rapidity", "Y(2S) Rapidity;y(#mu#mu);Counts", 500,-2.5,2.5), "ups_rap")	# 2016
 	
-	hist17 = dataY2S.Filter("run < 310000").Histo1D(("Y(2S) rapidity", "Y(2S) rapidity;y(#mu#mu);Counts", 500,-2.5,2.5), "ups_rap")
+	hist17 = dataY2S.Filter("run < 310000").Histo1D(("Y(2S) rapidity", "Y(2S) rapidity;y(#mu#mu);Counts", 500,-2.5,2.5), "ups_rap")	# 2017
 	
-	hist19 = dataY2S.Histo1D(("Y(2S) rapidity", "Y(2S) rapidity (stacked);y(#mu#mu);Counts", 500, -2.5, 2.5), "ups_rap")
+	hist18 = dataY2S.Histo1D(("Y(2S) rapidity", "Y(2S) rapidity (stacked);y(#mu#mu);Counts", 500, -2.5, 2.5), "ups_rap")	# 2018
 
 	hist17.SetFillColor(5)
 	hist16.SetFillColor(3)
@@ -270,24 +288,27 @@ def Y_rap():
 
 	c_rap = ROOT.TCanvas("Y2S Rapidity", "Y2S Rapidity")
 
-	hist19.Draw("")
+	hist18.Draw("")
 	hist17.Draw("same")
 	hist16.Draw("same")
 
 	c_rap.SaveAs(d+"/rapidity.pdf")
 	os.system(f"xdg-open {d}/rapidity.pdf")
-
+#_____________________________________________________________ END OF DEF
 
 #	PSEUDRAPIDITY PLOT	##############################
+
 def Y_pseudorap():
 
-	hist18 = dataY2S.Histo1D(("Y(2S) pseudorapidity", "Y(2S) Pseudorapidity (stacked);#eta(#mu#mu);Counts", 500, -2.0, 2.0), "ups_eta")
-	
-	hist16 = dataY2S.Filter("run < 290000").Histo1D(("Y(2S) pseudorapidity", "Y(2S) Pseudorapidity (stacked);#eta(#mu#mu);Counts", 500, -2.0, 2.0), "ups_eta")
-	
-	hist17 = dataY2S.Filter("run < 310000").Histo1D(("Y(2S) pseudorapidity", "Y(2S) Pseudorapidity (stacked);#eta(#mu#mu);Counts", 500, -2.0, 2.0), "ups_eta")
+		#	plot the cumulative data from 2016 to 2018
 
-	hist17.SetFillColor(5)
+	hist18 = dataY2S.Histo1D(("Y(2S) pseudorapidity", "Y(2S) Pseudorapidity (stacked);#eta(#mu#mu);Counts", 500, -2.0, 2.0), "ups_eta")	# 2018
+	
+	hist16 = dataY2S.Filter("run < 290000").Histo1D(("Y(2S) pseudorapidity", "Y(2S) Pseudorapidity (stacked);#eta(#mu#mu);Counts", 500, -2.0, 2.0), "ups_eta")	# 2016
+	
+	hist17 = dataY2S.Filter("run < 310000").Histo1D(("Y(2S) pseudorapidity", "Y(2S) Pseudorapidity (stacked);#eta(#mu#mu);Counts", 500, -2.0, 2.0), "ups_eta")	# 2017
+
+	hist17.SetFillColor(5)	# change color to highlight
 	hist16.SetFillColor(3)
 
 
@@ -299,30 +320,37 @@ def Y_pseudorap():
 
 	c.SaveAs(d+"/Pseudorapidity.pdf")
 	os.system(f"xdg-open {d}/Pseudorapidity.pdf")
-
+#_____________________________________________________________ END OF DEF
 
 
 #	DIMUON DECAY GEOMETRY		##############################
 def dimuon_decay():
 
 		#	angular phase plot
+		
 	hist1 = dataY2S.Histo2D(("dimuon decay", "Y(2S) #rightarrow #mu^{+}#mu^{-};#Delta#eta(#mu^{+}#mu^{-});#Delta#phi(#mu^{+}#mu^{-})", 50, 0., 2.5, 50, 0., 3.), "ups_deltaEta", "ups_deltaPhi")
+	
 	cprint(hist1, "Dimuon", "colz" )
 
-
 		#	phase plot
+
 	hist2 = dataY2S.Histo2D(("Dimuon decay", "Y(2S) #rightarrow #mu^{+}#mu^{-};#DeltaR(#mu^{+}#mu^{-});p_{T}(#mu^{+}#mu^{-}) [GeV]", 50, 0, 3, 50, 0, 150), "ups_deltaR", "ups_pT")
+	
 	cprint(hist2, "Dimuon2", "colz" )
 
 		#	phase profile
+
 	hist3 = dataY2S.Profile1D(("Dimuon decay", "Y(2S) #rightarrow #mu^{+}#mu^{-};p_{T}(#mu^{+}#mu^{-}) [GeV];#DeltaR(#mu^{+}#mu^{-})", 50, 0, 150), "ups_pT", "ups_deltaR")
-	cprint(hist3,"profile",stats=True)
 	
+	cprint(hist3,"profile",stats=True)
+#_____________________________________________________________ END OF DEF	
 
 
 #	MENU
 
 #	call functions by inserting the key from command line
+#	couple the key with the plot function, then execute in a for loop
+#	(since plot functions have no arguments, it reduces the code)
 compute = {	"1" : mu_pt,
 			"2" : m_Y2S,
 			"3" : fit_Y2S,
@@ -349,12 +377,15 @@ if not lang:	#print all plots
 
 else:			#print only selected-by-key plots
 	for i in lang: 
-	
-		while i not in compute.keys(): 	#in case of multiple misdigit
+		
+		#	avoid misdigit
+		while i not in compute.keys(): 	
 			i = input(f"\"{i}\" is not valid. Please insert a valid key:\n")
 		
+		#	execution
 		compute[i]()
-
+	
+#	****** 	end of loop
 
 	# End timer
 end = time()
@@ -366,27 +397,3 @@ print("\nComputing time: ", elapsed, "\n")
 
 fileroot.Close()
 
-#From root to Pandas
-# Y2S_tree = myfileY2SKK["rootuple/UpsTree;1"]
-# print(Y2S_tree.keys())
-
-# Y2SKK_tree = myfileY2SKK["rootuple/CandidateTree;1"]
-# print(Y2SKK_tree.keys())
-
-# data_Y2S = Y2S_tree.arrays(library="pd")
-# print(data_Y2S.head())
-
-
-#Upsilon:
-['run', 'event', 'numPrimaryVertices', 'trigger', 'ups_p4', 'muonP_p4', 'muonN_p4', 'iPVwithmuons_ups', 'ups_vertexWeight', 'ups_vProb', 'ups_vMass', 'ups_vNChi2', 'ups_DCA', 'ups_ctauPV', 'ups_ctauErrPV', 'ups_lxyPV', 'ups_lxyErrPV', 'ups_cosAlpha', 'ups_ctauBS', 'ups_ctauErrBS', 'ups_lxyBS', 'ups_lxyErrBS', 'mu1_pt', 'mu1_ptErr', 'mu1_d0', 'mu1_d0Err', 'mu1_dz', 'mu1_dzErr', 'mu1_dxy', 'mu1_dxyErr', 'mu1_nvsh', 'mu1_nvph', 'mu1_charge', 'mu2_pt', 'mu2_ptErr', 'mu2_d0', 'mu2_d0Err', 'mu2_dz', 'mu2_dzErr', 'mu2_dxy', 'mu2_dxyErr', 'mu2_nvsh', 'mu2_nvph', 'mu2_charge']
-#Upsilon KKcandidate_vMass
-['run', 'event', 'nCandPerEvent', 'numPrimaryVertices', 'trigger', 'candidate_p4', 'track1_p4', 'track2_p4', 'ditrack_p4', 'dimuon_p4', 'muonp_p4', 
-'muonn_p4', 'iPVwithmuons', 'dimuon_diMuIndx', 'dimuon_vertexWeight', 'dimuon_vProb', 'dimuon_vMass', 'dimuon_vNChi2', 'dimuon_DCA', 'dimuon_ctauPV', 
-'dimuon_ctauErrPV', 'dimuon_lxyPV', 'dimuon_lxyErrPV', 'dimuon_cosAlpha', 'dimuon_ctauBS', 'dimuon_ctauErrBS', 'dimuon_lxyBS', 'dimuon_lxyErrBS', 
-'candidate_vMass', 'candidate_vProb', 'candidate_vChi2', 'candidate_cosAlpha', 'candidate_ctauPV', 'candidate_ctauErrPV', 'candidate_charge', 
-'candidate_lxy', 'candidate_lxyErr', 'candidate_lxyz', 'candidate_lxyzErr', 'thePrimaryV_X', 'thePrimaryV_Y', 'thePrimaryV_Z', 
-'TheDecayVertex_X', 'TheDecayVertex_Y', 'TheDecayVertex_Z', 'thePrimaryV_2D_position', 'thePrimaryV_3D_position', 'TheDecayVertex_2D_position', 
-'TheDecayVertex_3D_position', 'TheVertexDistance_2D', 'TheVertexDistance_3D', 'track1_d0', 'track1_d0Err', 'track1_dz', 'track1_dzErr', 'track1_dxy',
-'track1_dxyErr', 'track1_nvsh', 'track1_nvph', 'track1_dRdimuon', 'track1_charge', 'track1_PV', 'track1_refVtx', 'track1_pvAssocQ', 'track1_dzAssocPV',
-'track2_d0', 'track2_d0Err', 'track2_dz', 'track2_dzErr', 'track2_dxy', 'track2_dxyErr', 'track2_nvsh', 'track2_nvph', 'track2_dRdimuon', 
-'track2_charge', 'track2_PV', 'track2_refVtx', 'track2_pvAssocQ', 'track2_dzAssocPV', 'ditrack_dRdimuon']

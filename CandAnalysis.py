@@ -50,11 +50,13 @@ except ValueError:
 if not os.path.isdir(f"./{d}/"):			
 	os.system(f"mkdir {d}")							
 
-# create a root file to store and edit plots, if necessary											
+# create a root file to store and edit plots, if necessary			
 p = ROOT.TFile.Open(d+"/cand.root","RECREATE")		
 												
-
-# creating datasets for the analysis		
+#------------------------------------------------------------------	
+#	OPENING THE SAMPLE
+#------------------------------------------------------------------
+		
 print("Creating Dataset...")
 
 dataY2SKK = CandTreeDefinitions\
@@ -62,16 +64,16 @@ dataY2SKK = CandTreeDefinitions\
 #.Define("mumupipi_mcmass", "ComputeMuMuPiPiInvMassMC(muonp_p4_fX, muonp_p4_fY, muonp_p4_fZ, muonn_p4_fX, muonn_p4_fY, muonn_p4_fZ, track1_p4_fX, track1_p4_fY, track1_p4_fZ, track2_p4_fX, track2_p4_fY, track2_p4_fZ)")	#Mass constraint
 
 
-#KK filters
+#	KK filters to compare the distribution of interest (K+K-) with 
+#	a random distribution (K+K+ or K-K-)
+
 dataKKrs = dataY2SKK.Filter("track1_charge * track2_charge < 0")
 dataKKws = dataY2SKK.Filter("track1_charge * track2_charge > 0")
 
-#############################################################
-#					CANDIDATES KK DECAY						#
-#############################################################
 
-
-#	DEFINING DIFFERENT PLOTS
+#------------------------------------------------------------------	
+#	DEFINITIONS OF THE PLOT FUNCTIONS
+#------------------------------------------------------------------
 """
 #	MASS PLOT OF CANDIDATE	##############################
 	
@@ -95,7 +97,7 @@ def kaonS_pt():
 	hist = dataKKrs.Histo1D(("Soft Kaon", "#phi #rightarrow K^{+}K^{-};p_{T}(K^{soft}) [GeV];Counts", 200, 0., 2.), "trackS_pT")
 	cprint(hist, d+"/SoftK", stats=True)
 
-#	KK INVARIANT MASS PLOT, WITH CUTS	#################
+#	KK INVARIANT MASS PLOT, WITH CUTS	
 def m_kk():
 		# Start timer
 	start = time()
@@ -122,11 +124,11 @@ def m_kk():
 		#overlap plots with cuts
 	for i, hist in enumerate(hists):
 		
-		hist.Scale(1./hist.Integral())	#normalization of plots
+		hist.Scale(1./hist.Integral())			#normalization of plots
 		hist.GetYaxis().SetRangeUser(0, 0.015)	#range of y axis
 		hist.SetLineColor(i+1)					
 		legend.AddEntry(hist.GetPtr(), "p_{T} lead > "+str(LValues[i])+"; p_{T} soft > "+str(SValues[i]), "l")	
-		hist.Draw("same")	#non si distinguono molto bene i dati
+		hist.Draw("same")
 		
 	legend.Draw("")
 
@@ -137,13 +139,17 @@ def m_kk():
 		 #only last cut
 	hists[-1].SetTitle("#phi #rightarrow K^{+}K^{-}: p_{T}(K^{L}) > 1.0, p_{T}(K^{S}) > 0.8")
 	cprint(hists[-1], d+"/MassKK_lastcut")
+#___________________________________________________________ END OF DEF	
+
 
 #	FIT OF KK_PT CUT	#####################
 #	take the cut pt_kL > 1.2 and pt_kS > 1.0
+
 def quadrature (a,b):
 	return pow( (pow(a,2) + pow(b,2)), 0.5 )
 
 def m_kk_fit(ptL = 1.2, ptS = 1.0):
+	
 	dfkk = dataKKrs.Filter(f"trackL_pT > {ptL} & trackS_pT > {ptS}")\
 	.Filter("ditrack_mass > 1.0 & ditrack_mass < 1.04")\
 	.Filter("track1_pvAssocQ + track2_pvAssocQ > 11")\
@@ -170,8 +176,8 @@ def m_kk_fit(ptL = 1.2, ptS = 1.0):
 	sigma.setConstant(1)		# fixed res from MC????????
 
 		#	Chebyshev coefficients
-	f0 = ROOT.RooRealVar("f0", "f0", +0.2, -1, +1)
-	f1 = ROOT.RooRealVar("f1", "f1", -0.05, -1, +1)
+	f0 = ROOT.RooRealVar("f0", "f0", 0.2, -1, 1)
+	f1 = ROOT.RooRealVar("f1", "f1", -0.05, -1, 1)
 
 		#	Number of events
 	Nbkg = ROOT.RooRealVar("N_{bkg}", "N bkg events", 50, 0., entries)
@@ -198,17 +204,6 @@ def m_kk_fit(ptL = 1.2, ptS = 1.0):
 	xmin = mean.getVal() - 2*quadrature(width.getVal()/2, sigma.getVal())
 	xmax = mean.getVal() + 2*quadrature(width.getVal()/2, sigma.getVal())
 
-	
-	kkmass.setRange("window", xmin,xmax)
-	S = sig.createIntegral(kkmass, Range="window").getVal() #NOT WORKING!!
-	
-	#kkmass.setVal(1.002)
-	#x= kkmass.getVal()
-	#y = sig.getVal()
-	
-	#print (f"\nthe evaluated signal is {y} in x={x}\n")
-	print (f"\nthe entries are {S}\n")
-
 	line0 = ROOT.TLine(xmin, 0., xmin, 10000)
 	line1 = ROOT.TLine(xmax, 0., xmax, 10000)
 	line0.SetLineStyle(2)
@@ -232,17 +227,12 @@ def m_kk_fit(ptL = 1.2, ptS = 1.0):
 		# Calculate elapsed time
 	elapsed = end - start
 	print("\nTime for Phi mass plot: ", elapsed, "\n") 
+#___________________________________________________________ END OF DEF
 
-#	c = ROOT.TCanvas()
-#	bkg_split = kkroohist.split(bkg)
-#	bkg_split.Draw()
-#	c.Draw()
-#	c.SaveAs(d+"/PhiMassPlotSignal.pdf")
-#	os.system(f"xdg-open {d}/PhiMassPlotSignal.pdf")
 	
 # PHI CANDIDATE PLOT	
-#ws = wrong sign (take K+K+ and K-K-)
-#compare the selection distribution with one random distribution
+# ws = wrong sign (take K+K+ and K-K-)
+# compare the selection distribution with one random distribution
 
 
 	#Γ φ = 0.00446 ± 0.00018
@@ -272,7 +262,8 @@ tagli = ymumu_filter+phiKKSelection
 tagli = tagli.replace(" & ", "\n")
 os.system(f"echo \"{tagli}\nbinning: {binning}\" > {d}/tagli.txt")
 
-#histograms
+#	CANDIDATE INVARIANT MASS DISTRIBUTION PLOT
+
 def mumukk(zoom = False):
 
 	hist0 = dataKKrs.Filter(ymumu_filter + phiKKSelection).Histo1D(("MuMuKK cands", "Y(2S)(#rightarrow #mu^{+}#mu^{-})#phi(#rightarrow K^{+}K^{-});m(#mu#muKK) - m(#mu#mu) + m^{PDG}(Y) [GeV];Counts", binning, edge[0], edge[1]), "candidate_vMass")
@@ -324,18 +315,9 @@ def mumukk(zoom = False):
 		
 		p.WriteObject(c0,"phi_candidate(zoom)")
 		os.system(f"xdg-open {d}/PhiCandidateZoom.pdf")
+#___________________________________________________________ END OF DEF
 
 #	MENU
-
-compute = {	"1" : kaonL_pt,
-			"2" : kaonS_pt,
-			"3" : m_kk,
-			"4" : m_kk_fit,		
-			"5" : mumukk,		
-			"6" : mumukk,
-			"q" : exit
-		  }
-
 
 lang = input("\nSelect plots (Separate by spacing):\n1. Leading Kaon pt\n2. Soft Kaon pt\n3. KK invariant mass (with K_pt cuts)\n4. Fit KK invariant mass\n5. Phi Candidate plot\n6. Phi candidate plot with Zoom\nENTER: 1-5 Plots\nPress \"q\" to EXIT.\n").split()
 
@@ -345,19 +327,6 @@ if "q" not in lang:
 	# Start timer
 start = time()
 
-if not lang:	#print all plots		
-	for func in compute.values() : func()
-
-else:			#print only selected-by-key plots
-	for i in lang: 
-	
-		while i not in compute.keys(): 	#in case of multiple misdigit
-			i = input(f"\"{i}\" is not valid. Please insert a valid key:\n")
-		
-		if i != "6" : compute[i]()
-		else : compute[i](zoom = True)
-
-"""
 if not lang:	#print all plots
 
 		kaonL_pt()
@@ -367,7 +336,25 @@ if not lang:	#print all plots
 		mumukk()			#save to .root
 else:
 	for i in lang:
-		match i:
+	
+		#	avoid misdigit
+		while i not in "1 2 3 4 5 6 q":
+			i = input(f"\"{i}\" is not valid. Please insert a valid key: ")
+		
+		if i == "1":	kaonL_pt()
+		if i == "2":	kaonS_pt()
+		if i == "3":	m_kk()
+		if i == "4":	m_kk_fit()		#save to .root
+		if i == "5":	mumukk()		#save to .root
+		if i == "6":	mumukk(zoom=True)
+		if i == "q":
+			print ("Bye Bye")
+			exit()
+		
+
+"""
+################ for python version >= 3.10
+	match i:
 			case "1":
 				kaonL_pt()
 			case "2":
@@ -383,11 +370,8 @@ else:
 			case "q":
 				print ("Bye Bye")
 				exit()
-			case _:
-				print("Not valid")
-				exit()
-
 """
+
 	# End timer
 end = time()
 
