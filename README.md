@@ -112,7 +112,7 @@ I implemented a standard function `cprint` to simply draw and save a histogram w
 In general, histograms were made using the RooFit package: 
 `Histo1D` or `Histo2D` of the RDataFrame class are used as standard methods to print simple histograms, while to perform the fit of a histogram, RDataFrame is pythonized into a RooDataSet through the method `from_numpy`.
 
-[//] # insert examples plots
+[//] # insert examples plots 
 
 
 ### 3. The interface
