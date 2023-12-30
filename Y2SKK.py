@@ -1,3 +1,19 @@
+"""
+Software & Computing project
+by Francesco Pacelli
+	a. y. 22/23
+
+
+'Y2SKK.py' is devoted to the data reading and elaboration of the UpsTree stored in the rootuples.
+It exploit the PyROOT package and its structure follows 3 sections:
+	1. Setup - Import of modules, custom function definitions, input management
+ 	2. Core  - Definition of 'Plot functions': each plot is associated to a function that will be executed
+  	3. Menu  - Implementation of a menu to select plots by command line
+
+Execution: simply type `python3 Y2SKK.py` from command line, plus arguments (see TREES READING section)
+
+"""
+
 print("\n^^^^^^^^\tY(2S)->µµ ANALYSER\t^^^^^^^^\n\nImporting modules...")
 
 
@@ -44,7 +60,7 @@ if not os.path.isdir(f"./{d}/"):	# check if the directory exists,
 
 
 
-#	plot template	-------------------------------------------------|
+#	PLOT TEMPLATES	-------------------------------------------------|
 def cprint (hist, name, opt="", stats=False):
 	title= "Y2S "+name
 	c = ROOT.TCanvas(title, title)
@@ -61,8 +77,9 @@ def binCount (var, rangeName):
 	b = var.getRange(rangeName)[1]
 	nbins = varBinning.binNumber(b) - varBinning.binNumber(a)
 	return nbins
+	
 #------------------------------------------------------------------	
-#	OPENING THE SAMPLE
+#	OPEN THE SAMPLE
 #------------------------------------------------------------------
 
 print("Creating Dataset...")
@@ -117,7 +134,7 @@ def m_Y2S():
 	cprint(hist, "YinvMass")
 #___________________________________________________________ END OF DEF
 
-#	FIT	OF Y2S MASS PLOT
+#	FIT OF Y2S MASS PLOT
 	
 def fit_Y2S():	
 	
@@ -141,36 +158,37 @@ def fit_Y2S():
 	mumuroohist = mumuroodata.binnedClone()
 	
 	xframe = upsmass.frame(Title="Y(2S) Mass")
-	
+
+# for reference:
 # mass Y2S PDG = 10.02326
 # mass Y3S PDG = 10.35520
 
-		#signal mean
+		# signal mean
 	mean2s = ROOT.RooRealVar("#mu_{Y(2S)}", "mean of gaussians", 
-							  10., 9.8, 10.2)
+				  10., 9.8, 10.2)
 
-		#sigmas
+		# sigma
 	sigma2s = ROOT.RooRealVar("#sigma_{Y(2S)}", "width", 0.063, 0.01, 5.) 
 		
-		#Crystal Ball parameters
+		# Crystal Ball parameters
 	alpha = ROOT.RooRealVar ("alpha","alpha", 1.62, 0., 5.)
 	n= ROOT.RooRealVar ("n","n", 0.1, -1., 1.);
 
-		#chebychev coefficients
+		# Chebychev coefficients
 	f0 = ROOT.RooRealVar("f0", "f0", 5., 0., 10.)
 	f1 = ROOT.RooRealVar("f1", "f1", 0., -20., 1.)
 	f2 = ROOT.RooRealVar("f2", "f2", 2., 0., 8.)
 		
-		#fractions
+		# fractions
 	bkgfrac = ROOT.RooRealVar("f_{bkg}", "fraction of background", 0.5, 0.001, 1.)
 
 	# 	MODELS FOR MASS PLOT
 
-		#signals
+		# signals
 	sig2s1 = ROOT.RooGaussian("signal2s_1", "signal2s_1", upsmass, mean2s, sigma2s)
 	cb = ROOT.RooCBShape("Double CB", "#upsilon(2s) Pdf", upsmass, mean2s, sigma2s, alpha, n);
 		
-		#backgrounds
+		# backgrounds
 	bkg2 = ROOT.RooChebychev("bkg", "Background", upsmass, ROOT.RooArgList(f0,f1))
 	bkg3 = ROOT.RooChebychev("bkg", "Background", upsmass, ROOT.RooArgList(f0,f1,f2))
 
@@ -202,21 +220,17 @@ def fit_Y2S():
 
 	component = model.pdfList()
 
-
+		# components
 	model.plotOn(xframe, Components={component[0]}, LineStyle=":", LineColor="g")
 	model.plotOn(xframe, Components={component[1]}, LineStyle=":", LineColor="b")
-	model.plotOn(xframe,LineColor="r")	#total
+		
+		# total
+	model.plotOn(xframe,LineColor="r")	
 	
-	model.paramOn(xframe, ROOT.RooFit.Layout(0.1, 0.9, 0.9)) #print all parameters
+		# print all parameters
+	model.paramOn(xframe, ROOT.RooFit.Layout(0.1, 0.9, 0.9)) 
 
-#		#print chisquare
-#	text_box = ROOT.TPaveText(0.65, 0.75, 0.9, 0.9, "NDC")
-#	text_box.AddText( str(model.getTitle()) )	#type of fit
-#	text_box.AddText(f"#chi^{2}/ndof = {reducedChiSquared}")
-#	text_box.SetFillColor(0)
-#	text_box.SetBorderSize(1)
-	
-		#print fit and pullplot
+		# print fit and pullplot
 	c = ROOT.TCanvas("MassPlotY2S", "MassPlotY2S")
 	c.Divide(1,2)
 	c.cd(1)
@@ -230,18 +244,24 @@ def fit_Y2S():
 	os.system(f"xdg-open {d}/MassPlotY2S.pdf")
 #______________________________________________________________ END OF DEF
 
-#######		TRANSVERSAL MOMENTUM PLOTS	#############
+####################	TRANSVERSAL MOMENTUM PLOTS
 
+def Y_pt ():
 
-def Y_pt():
-
-		#	plot the cumulative data from 2016 to 2018
-		
-	hist16 = dataY2S.Filter("run < 290000").Histo1D(("Y(2S) transverse momentum", "Y(2S) transverse momentum;p_{T}(#mu#mu) [GeV];Counts", 500, 0., 50), "ups_pT")	#	2016 
+		#	plot the cumulative data from 2016 to 2018	
+	hist16 = dataY2S\
+	.Filter("run < 290000")\
+	.Histo1D(("Y(2S) transverse momentum", "Y(2S) transverse momentum;p_{T}(#mu#mu) [GeV];Counts",
+		  500, 0., 50), "ups_pT") # 2016 
 	
-	hist17 = dataY2S.Filter("run < 310000").Histo1D(("Y(2S) transverse momentum", "Y(2S) transverse momentum;p_{T}(#mu#mu) [GeV];Counts", 500, 0., 50), "ups_pT")	#	2017
+	hist17 = dataY2S\
+	.Filter("run < 310000")\
+	.Histo1D(("Y(2S) transverse momentum", "Y(2S) transverse momentum;p_{T}(#mu#mu) [GeV];Counts", 
+		  500, 0., 50), "ups_pT") # 2017
 
-	hist18 = dataY2S.Histo1D(("Y(2S) transverse momentum", "Y(2S) transverse momentum (stacked);p_{T}(#mu#mu) [GeV];Counts", 500, 0., 50.), "ups_pT")	#	2018 
+	hist18 = dataY2S\
+	.Histo1D(("Y(2S) transverse momentum", "Y(2S) transverse momentum (stacked);p_{T}(#mu#mu) [GeV];Counts",
+		  500, 0., 50.), "ups_pT") # 2018 
 
 	c_pt = ROOT.TCanvas("Y(2S) pT", "Y(2S) pT")
 
@@ -262,7 +282,8 @@ def Y_pt():
 
 def Y_vProb():
 
-	p_hist = dataY2S.Histo1D(("Y(2S) Probability", "Y(2S) Probability ;p;Counts", 500, 0., 1.), "ups_vProb")
+	p_hist = dataY2S\
+	.Histo1D(("Y(2S) Probability", "Y(2S) Probability ;p;Counts", 500, 0., 1.), "ups_vProb")
 
 	c_p = ROOT.TCanvas("Y2S prob", "Y2S prob")
 	
@@ -277,11 +298,16 @@ def Y_rap():
 
 		#	plot the cumulative data from 2016 to 2018
 
-	hist16 = dataY2S.Filter("run < 290000").Histo1D(("Y(2S) Rapidity", "Y(2S) Rapidity;y(#mu#mu);Counts", 500,-2.5,2.5), "ups_rap")	# 2016
+	hist16 = dataY2S\
+	.Filter("run < 290000")\
+	.Histo1D(("Y(2S) Rapidity", "Y(2S) Rapidity;y(#mu#mu);Counts", 500,-2.5,2.5), "ups_rap")	# 2016
 	
-	hist17 = dataY2S.Filter("run < 310000").Histo1D(("Y(2S) rapidity", "Y(2S) rapidity;y(#mu#mu);Counts", 500,-2.5,2.5), "ups_rap")	# 2017
+	hist17 = dataY2S\
+	.Filter("run < 310000")\
+	.Histo1D(("Y(2S) rapidity", "Y(2S) rapidity;y(#mu#mu);Counts", 500,-2.5,2.5), "ups_rap")	# 2017
 	
-	hist18 = dataY2S.Histo1D(("Y(2S) rapidity", "Y(2S) rapidity (stacked);y(#mu#mu);Counts", 500, -2.5, 2.5), "ups_rap")	# 2018
+	hist18 = dataY2S\
+	.Histo1D(("Y(2S) rapidity", "Y(2S) rapidity (stacked);y(#mu#mu);Counts", 500, -2.5, 2.5), "ups_rap")	# 2018
 
 	hist17.SetFillColor(5)
 	hist16.SetFillColor(3)
@@ -303,11 +329,16 @@ def Y_pseudorap():
 
 		#	plot the cumulative data from 2016 to 2018
 
-	hist18 = dataY2S.Histo1D(("Y(2S) pseudorapidity", "Y(2S) Pseudorapidity (stacked);#eta(#mu#mu);Counts", 500, -2.0, 2.0), "ups_eta")	# 2018
+	hist18 = dataY2S\
+	.Histo1D(("Y(2S) pseudorapidity", "Y(2S) Pseudorapidity (stacked);#eta(#mu#mu);Counts", 500, -2.0, 2.0), "ups_eta")	# 2018
 	
-	hist16 = dataY2S.Filter("run < 290000").Histo1D(("Y(2S) pseudorapidity", "Y(2S) Pseudorapidity (stacked);#eta(#mu#mu);Counts", 500, -2.0, 2.0), "ups_eta")	# 2016
+	hist16 = dataY2S\
+	.Filter("run < 290000")\
+	.Histo1D(("Y(2S) pseudorapidity", "Y(2S) Pseudorapidity (stacked);#eta(#mu#mu);Counts", 500, -2.0, 2.0), "ups_eta")	# 2016
 	
-	hist17 = dataY2S.Filter("run < 310000").Histo1D(("Y(2S) pseudorapidity", "Y(2S) Pseudorapidity (stacked);#eta(#mu#mu);Counts", 500, -2.0, 2.0), "ups_eta")	# 2017
+	hist17 = dataY2S\
+	.Filter("run < 310000")\
+	.Histo1D(("Y(2S) pseudorapidity", "Y(2S) Pseudorapidity (stacked);#eta(#mu#mu);Counts", 500, -2.0, 2.0), "ups_eta")	# 2017
 
 	hist17.SetFillColor(5)	# change color to highlight
 	hist16.SetFillColor(3)
@@ -329,19 +360,25 @@ def dimuon_decay():
 
 		#	angular phase plot
 		
-	hist1 = dataY2S.Histo2D(("dimuon decay", "Y(2S) #rightarrow #mu^{+}#mu^{-};#Delta#eta(#mu^{+}#mu^{-});#Delta#phi(#mu^{+}#mu^{-})", 50, 0., 2.5, 50, 0., 3.), "ups_deltaEta", "ups_deltaPhi")
+	hist1 = dataY2S\
+	.Histo2D( ("dimuon decay", "Y(2S) #rightarrow #mu^{+}#mu^{-};#Delta#eta(#mu^{+}#mu^{-});#Delta#phi(#mu^{+}#mu^{-})", 
+		  50, 0., 2.5, 50, 0., 3.), "ups_deltaEta", "ups_deltaPhi" )
 	
 	cprint(hist1, "Dimuon", "colz" )
 
 		#	phase plot
 
-	hist2 = dataY2S.Histo2D(("Dimuon decay", "Y(2S) #rightarrow #mu^{+}#mu^{-};#DeltaR(#mu^{+}#mu^{-});p_{T}(#mu^{+}#mu^{-}) [GeV]", 50, 0, 3, 50, 0, 150), "ups_deltaR", "ups_pT")
+	hist2 = dataY2S\
+	.Histo2D( ("Dimuon decay", "Y(2S) #rightarrow #mu^{+}#mu^{-};#DeltaR(#mu^{+}#mu^{-});p_{T}(#mu^{+}#mu^{-}) [GeV]", 
+		  50, 0, 3, 50, 0, 150), "ups_deltaR", "ups_pT" )
 	
 	cprint(hist2, "Dimuon2", "colz" )
 
 		#	phase profile
 
-	hist3 = dataY2S.Profile1D(("Dimuon decay", "Y(2S) #rightarrow #mu^{+}#mu^{-};p_{T}(#mu^{+}#mu^{-}) [GeV];#DeltaR(#mu^{+}#mu^{-})", 50, 0, 150), "ups_pT", "ups_deltaR")
+	hist3 = dataY2S\
+	.Profile1D( ("Dimuon decay", "Y(2S) #rightarrow #mu^{+}#mu^{-};p_{T}(#mu^{+}#mu^{-}) [GeV];#DeltaR(#mu^{+}#mu^{-})", 
+		    50, 0, 150), "ups_pT", "ups_deltaR" )
 	
 	cprint(hist3,"profile",stats=True)
 #_____________________________________________________________ END OF DEF	
@@ -352,19 +389,30 @@ def dimuon_decay():
 #	call functions by inserting the key from command line
 #	couple the key with the plot function, then execute in a for loop
 #	(since plot functions have no arguments, it reduces the code)
+
 compute = {	"1" : mu_pt,
-			"2" : m_Y2S,
-			"3" : fit_Y2S,
-			"4" : Y_pt,		
-			"5" : Y_vProb,		
-			"6" : Y_rap,
-			"7" : Y_pseudorap,
-			"8" : dimuon_decay,
-			"q" : exit
-		  }
+		"2" : m_Y2S,
+		"3" : fit_Y2S,
+		"4" : Y_pt,		
+		"5" : Y_vProb,		
+		"6" : Y_rap,
+		"7" : Y_pseudorap,
+		"8" : dimuon_decay,
+		"q" : exit
+	  }
 
 	
-lang = input("\nSelect plots (Separate by spacing):\n1. Single Muon pT Plot\n2. Y(2S) Mass Plot\n3. Fit of Y(2S) Mass Plot\n4. Y(2S) pT\n5. Y(2S) Vertex Probability\n6. Y(2S) Rapidity\n7. Y(2S) Pseudorapidity\n8. Plots for Geometry of Di-Muon Decay\nENTER to print all plots.\nPress \"q\" to EXIT.\n").split()
+lang = input("\nSelect plots (Separate by spacing):\n" + 
+	     "1. Single Muon pT Plot\n" + 
+	     "2. Y(2S) Mass Plot\n" + 
+	     "3. Fit of Y(2S) Mass Plot\n" + 
+	     "4. Y(2S) pT\n" + 
+	     "5. Y(2S) Vertex Probability\n" + 
+	     "6. Y(2S) Rapidity\n" + 
+	     "7. Y(2S) Pseudorapidity\n" + 
+	     "8. Plots for Geometry of Di-Muon Decay\n" + 
+	     "ENTER to print all plots.\n" + 
+	     "Press \"q\" to EXIT.\n").split()
 
 if "q" not in lang:
 	print("Processing...") 
