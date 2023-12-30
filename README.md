@@ -112,13 +112,6 @@ I implemented a standard function `cprint()` to simply draw and save a histogram
 In general, histograms were made using the RooFit package: 
 `Histo1D()` or `Histo2D()` of the RDataFrame class are used as standard methods to print simple histograms, while to perform the fit of a histogram, RDataFrame is pythonized with the method `AsNumpy()`, then turned into a RooDataSet through the method `from_numpy()`.
 
-In figure, there are two examples of plots: the first is the fit of the $phi$ invariant mass, while the second is the representation of the $\Upsilon(2S)\;p_T$.
-
-![fit] (file:///home/pacelli/tesi/allplots_cand/PhiMassPlot.pdf)
-
-![histo] (file:///home/pacelli/tesi/ups_plots/pt.pdf)
-
-
 ### 3. The interface
 
 The interface is designed to allow the user to select which plots to work on. A menu is printed on the terminal at the beginning of the execution, displaying the keys to digit to select the plots. It is possible to choose multiple plots by separating the keys with space.
