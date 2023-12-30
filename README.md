@@ -96,7 +96,6 @@ import declarations
 ```
 Right after, the `Y2SPhiRun2List.txt` is read, and all its lines are trimmed and stored in a list.
 In order to execute only a sample of the whole dataset and speed up the debugging of the code or the correction of the plots, it is possible to pass an integer _N_ as command line argument, selecting the first _N_ .root files to open. At the end of the program, all the saved plots are stored in a directory named "test".
-
 Alternatively, a string can be passed as command line argument, as the name of a different storing folder for the plots. This option is meant to be chosen when the code is correclty working and ready to analyse the whole dataset.
 
 At this point, the sample of rootuples is passed as argument of RDataFrame constructor. Together with the dataframe, a TFile is opened to save the most elaborated plots, so that it is possible to access and edit them through the TBrowser or by the line command `rootbrowse <fileroot>.root`.
