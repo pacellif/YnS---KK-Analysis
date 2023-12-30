@@ -83,7 +83,7 @@ Each of the two macro can be divided in three parts:
 2. The second part contains the definition of functions which will draw and save all the plots for the analysis (_plot functions_).
 3. In the last part, it is implemented an interface that allows to choose which plots to print.
 
-### 1. Starting
+### 1. Setup
 
 The libraries and modules imported by the program there are
 ```py
