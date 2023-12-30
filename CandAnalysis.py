@@ -1,3 +1,23 @@
+"""
+Software & Computing project
+by Francesco Pacelli
+	a. y. 22/23
+
+
+'CandAnalysis.py' is devoted to the data reading and elaboration of the CandidateTree stored in the rootuples.
+It exploit the PyROOT package and its structure follows 3 sections:
+	1. Setup - Import of modules, custom function definitions, input management
+ 	2. Core  - Definition of 'Plot functions': each plot is associated to a function that will be executed
+  	3. Menu  - Implementation of a menu to select plots by command line
+
+Execution: simply type `python3 CandAnalysis.py` from command line
+
+"""
+
+
+#--------------------------------------------------------------------------------------
+#	SETUP
+#--------------------------------------------------------------------------------------
 print("\n^^^^^^^^\tY(2S)->µµ + Phi->KK SPECTRUM ANALYSER\t^^^^^^^^\n\nImporting modules...")
 
 import ROOT
@@ -21,8 +41,9 @@ def cprint (hist, name, opt="", stats=False):
 		
 	c.SaveAs(name+".pdf")
 	os.system("xdg-open "+name+".pdf")
+#_____________________________________________ END OF DEF
 
-
+#	FILES PATH READER
 
 with open('data/Y2SPhiRun2List.txt') as f:
     allFiles = f.readlines()
@@ -31,11 +52,11 @@ with open('data/Y2SPhiRun2List.txt') as f:
 for i in range(len(allFiles)):			
     allFiles[i] = allFiles[i].replace("\n", "")
 
+
 #	TREES READING - using command line arguments
 #	- no command line arguments: analysis of all data and store plots in a "test" directory
 # 	- argv is an integer: analysis of first n root files, in a "test" directory
 #	- argv is a string: analysis of all data and store plots in directory named <argv_value>
-
 
 d = "test"
 try: 
@@ -52,15 +73,13 @@ if not os.path.isdir(f"./{d}/"):
 # create a root file to store and edit plots, if necessary			
 p = ROOT.TFile.Open(d+"/cand.root","RECREATE")		
 												
-#------------------------------------------------------------------	
-#	OPENING THE SAMPLE
-#------------------------------------------------------------------
+
+#	OPEN THE SAMPLE
 		
 print("Creating Dataset...")
 
 dataY2SKK = CandTreeDefinitions\
-(ROOT.RDataFrame("rootuple/CandidateTree",sample))#\
-#.Define("mumupipi_mcmass", "ComputeMuMuPiPiInvMassMC(muonp_p4_fX, muonp_p4_fY, muonp_p4_fZ, muonn_p4_fX, muonn_p4_fY, muonn_p4_fZ, track1_p4_fX, track1_p4_fY, track1_p4_fZ, track2_p4_fX, track2_p4_fY, track2_p4_fZ)")	#Mass constraint
+(ROOT.RDataFrame("rootuple/CandidateTree",sample))#
 
 
 #	KK filters to compare the distribution of interest (K+K-) with 
@@ -71,37 +90,31 @@ dataKKws = dataY2SKK.Filter("track1_charge * track2_charge > 0")
 
 
 #------------------------------------------------------------------	
-#	DEFINITIONS OF THE PLOT FUNCTIONS
+#	CORE - DEFINITIONS OF THE PLOT FUNCTIONS
 #------------------------------------------------------------------
-"""
-#	MASS PLOT OF CANDIDATE	##############################
-	
-	#candidate mass
-hist = dataY2SKK.Histo1D(("Candidate Mass", "Candidate Mass; m(K^{L})+m(K^{S})+ m(Y(2S))[GeV/c^{2}];Counts", 500, 11., 13.6), "candidate_vMass")
-cprint(hist, d+"/candidateMass")
-
-	#dimuon mass
-hist = dataY2SKK.Histo1D(("Dimuon Mass", "Candidate Mass; m[GeV/c^{2}];Counts", 500, 9.4, 10.5), "dimuon_vMass")
-cprint(hist, d+"/dimuonMass", stats=True)
-"""
 
 #	LEADING KAON PT PLOT
 
 def kaonL_pt ():
 	hist = dataKKrs.Histo1D(("Leading Kaon", "#phi #rightarrow K^{+}K^{-};p_{T}(K^{L}) [GeV];Counts", 200, 0., 3.), "trackL_pT")
 	cprint(hist, d+"/LeadingK", stats=True)
+#_______________________________________________________ END OF DEF
 
 # 	SOFT KAON PT PLOT
+
 def kaonS_pt():
 	hist = dataKKrs.Histo1D(("Soft Kaon", "#phi #rightarrow K^{+}K^{-};p_{T}(K^{soft}) [GeV];Counts", 200, 0., 2.), "trackS_pT")
 	cprint(hist, d+"/SoftK", stats=True)
+#_______________________________________________________ END OF DEF
 
-#	KK INVARIANT MASS PLOT, WITH CUTS	
+#	KK INVARIANT MASS PLOT, WITH CUTS
+
 def m_kk():
-		# Start timer
-	start = time()
 
-		#borders definitions
+#	The purpose of this plot is to find and show which are the best KK pT cuts
+#	to set boundaries to the phi mass
+
+		# cuts for leading K and soft K pTs
 	LValues = [0., 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9, 1.0]
 	SValues = [0., 0.5, 0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8]
 		
@@ -115,7 +128,6 @@ def m_kk():
 		
 
 	c0 = ROOT.TCanvas()
-
 	legend = ROOT.TLegend(0.46, 0.15, 0.89, 0.50)
 
 	hists[0].SetStats(0)	#no stats
@@ -123,19 +135,19 @@ def m_kk():
 		#overlap plots with cuts
 	for i, hist in enumerate(hists):
 		
-		hist.Scale(1./hist.Integral())			#normalization of plots
-		hist.GetYaxis().SetRangeUser(0, 0.015)	#range of y axis
+		hist.Scale(1./hist.Integral())		# normalization of plots
+		hist.GetYaxis().SetRangeUser(0, 0.015)	# range of y axis
 		hist.SetLineColor(i+1)					
 		legend.AddEntry(hist.GetPtr(), "p_{T} lead > "+str(LValues[i])+"; p_{T} soft > "+str(SValues[i]), "l")	
 		hist.Draw("same")
 		
 	legend.Draw("")
 
-
 	c0.Draw("")
 	c0.SaveAs(d+"/MassKK.pdf")
 	os.system(f"xdg-open {d}/MassKK.pdf")
-		 #only last cut
+	
+		 # display only last cut
 	hists[-1].SetTitle("#phi #rightarrow K^{+}K^{-}: p_{T}(K^{L}) > 1.0, p_{T}(K^{S}) > 0.8")
 	cprint(hists[-1], d+"/MassKK_lastcut")
 #___________________________________________________________ END OF DEF	
@@ -144,19 +156,24 @@ def m_kk():
 #	FIT OF KK_PT CUT	#####################
 #	take the cut pt_kL > 1.2 and pt_kS > 1.0
 
-def quadrature (a,b):
-	return pow( (pow(a,2) + pow(b,2)), 0.5 )
+#	Signal -> Voigtian
+#	Background -> Polynomial
+
+def quadrature (a,b):					# to determine boundaries of the phi mass ()
+	return pow( (pow(a,2) + pow(b,2)), 0.5 )	# µ ± 2 Sigma with [ Sigma = ( (Gamma/2)^2 + sigma^2 )^(0.5) ]
 
 def m_kk_fit(ptL = 1.2, ptS = 1.0):
-	
+
+		# create the filtered dataset AsNumpy
 	dfkk = dataKKrs.Filter(f"trackL_pT > {ptL} & trackS_pT > {ptS}")\
 	.Filter("ditrack_mass > 1.0 & ditrack_mass < 1.04")\
 	.Filter("track1_pvAssocQ + track2_pvAssocQ > 11")\
 	.AsNumpy(columns=["ditrack_mass"])
 		
-		#variable
+		# variable
 	kkmass = ROOT.RooRealVar("ditrack_mass", "m(KK) [GeV]", 1.00, 1.04)
 
+		# create the RooDataSet
 	kkroodata = ROOT.RooDataSet.from_numpy({"ditrack_mass": dfkk["ditrack_mass"]}, [kkmass])
 	kkroohist = kkroodata.binnedClone()
 	
@@ -191,7 +208,7 @@ def m_kk_fit(ptL = 1.2, ptS = 1.0):
 		
 	model.fitTo(kkroohist)
 		
-		#print
+		# print
 	c0 = ROOT.TCanvas("canvas0", "canvas0", 1200, 600)
 
 	kkroohist.plotOn(phiframe)
@@ -200,6 +217,7 @@ def m_kk_fit(ptL = 1.2, ptS = 1.0):
 	model.plotOn(phiframe, Components={bkg}, LineStyle=":", LineColor="g")
 	model.paramOn(phiframe, ROOT.RooFit.Parameters([mean, width, Nbkg, Nsig]), ROOT.RooFit.Layout(0.65, 0.9, 0.9))
 
+		# create boundaries and highlight them with lines
 	xmin = mean.getVal() - 2*quadrature(width.getVal()/2, sigma.getVal())
 	xmax = mean.getVal() + 2*quadrature(width.getVal()/2, sigma.getVal())
 
@@ -218,14 +236,7 @@ def m_kk_fit(ptL = 1.2, ptS = 1.0):
 	c0.Draw()
 	p.WriteObject(c0,"phi_mass_fit")
 	c0.SaveAs(d+"/PhiMassPlot.pdf")
-	os.system(f"xdg-open {d}/PhiMassPlot.pdf")
-		
-		# End timer
-	end = time()
-
-		# Calculate elapsed time
-	elapsed = end - start
-	print("\nTime for Phi mass plot: ", elapsed, "\n") 
+	os.system(f"xdg-open {d}/PhiMassPlot.pdf") 
 #___________________________________________________________ END OF DEF
 
 	
@@ -240,6 +251,7 @@ def m_kk_fit(ptL = 1.2, ptS = 1.0):
 	#	Y mass cuts: µ ± 2 sigma 
 	#	φ mass cuts: µ ± 2 Sigma
 
+# filters
 ymumu_filter= "dimuon_mass > 9.881 & dimuon_mass < 10.147 & dimuon_pT > 18 & "
 phiKKSelection = '''candidate_vProb > 0.1 &
 ditrack_mass > 1.0150 &
@@ -248,26 +260,35 @@ trackL_pT > 1.0 &
 trackS_pT > 0.8'''
 quality_filter = " & track1_pvAssocQ + track2_pvAssocQ > 11"
 
-
 # ditrack mass: interval of phi rest mass
 # vProb: vertex probability
 
 binning = 250
 edge = [10.8, 13.3]
 
-# new dir with cuts written on file
-
+	# cuts written on file
 tagli = ymumu_filter+phiKKSelection
 tagli = tagli.replace(" & ", "\n")
 os.system(f"echo \"{tagli}\nbinning: {binning}\" > {d}/tagli.txt")
 
 #	CANDIDATE INVARIANT MASS DISTRIBUTION PLOT
 
+# now find the spectrum of Y + phi, comparing a spectrum where a real phi is considered (opposite sign kaons)
+# with respect to a random distribution given by two kaons with same sign
+
 def mumukk(zoom = False):
 
-	hist0 = dataKKrs.Filter(ymumu_filter + phiKKSelection).Histo1D(("MuMuKK cands", "Y(2S)(#rightarrow #mu^{+}#mu^{-})#phi(#rightarrow K^{+}K^{-});m(#mu#muKK) - m(#mu#mu) + m^{PDG}(Y) [GeV];Counts", binning, edge[0], edge[1]), "candidate_vMass")
-	
-	hist1 = dataKKws.Filter(ymumu_filter + phiKKSelection).Histo1D(("MuMuKK cands", "Y(2S)(#rightarrow #mu^{+}#mu^{-})#phi(#rightarrow K^{+}K^{-});m(#mu#muKK) - m(#mu#mu) + m^{PDG}(Y) [GeV];Counts", binning, edge[0], edge[1]), "candidate_vMass")
+		# opposite sign kaons
+	hist0 = dataKKrs\
+	.Filter(ymumu_filter + phiKKSelection)\
+	.Histo1D(("MuMuKK cands", "Y(2S)(#rightarrow #mu^{+}#mu^{-})#phi(#rightarrow K^{+}K^{-});m(#mu#muKK) - m(#mu#mu) + m^{PDG}(Y) [GeV];Counts", 
+		  binning, edge[0], edge[1]), "candidate_vMass")
+
+		# same sign kaons
+	hist1 = dataKKws\
+	.Filter(ymumu_filter + phiKKSelection)\
+	.Histo1D(("MuMuKK cands", "Y(2S)(#rightarrow #mu^{+}#mu^{-})#phi(#rightarrow K^{+}K^{-});m(#mu#muKK) - m(#mu#mu) + m^{PDG}(Y) [GeV];Counts", 
+		  binning, edge[0], edge[1]), "candidate_vMass")
 
 	c0 = ROOT.TCanvas()
 
@@ -291,6 +312,9 @@ def mumukk(zoom = False):
 	os.system(f"xdg-open {d}/PhiCandidate.pdf")
 	
 	p.WriteObject(c0,"phi_candidate")
+
+# eventually, it is possible to zoom in a particular region, in case
+# abundancies of countings are seen in the spectrum
 	
 	if zoom:
 
@@ -316,9 +340,23 @@ def mumukk(zoom = False):
 		os.system(f"xdg-open {d}/PhiCandidateZoom.pdf")
 #___________________________________________________________ END OF DEF
 
+#----------------------------------------------------------------------
 #	MENU
+#----------------------------------------------------------------------
 
-lang = input("\nSelect plots (Separate by spacing):\n1. Leading Kaon pt\n2. Soft Kaon pt\n3. KK invariant mass (with K_pt cuts)\n4. Fit KK invariant mass\n5. Phi Candidate plot\n6. Phi candidate plot with Zoom\nENTER: 1-5 Plots\nPress \"q\" to EXIT.\n").split()
+# The menu allows to select which plot(s) to print:
+# from command line, insert the key(s) of the plot(s), 
+# separated by space for multiple choice.
+
+lang = input("\nSelect plots (Separate by spacing):\n" + 
+	     "1. Leading Kaon pt\n" + 
+	     "2. Soft Kaon pt\n" + 
+	     "3. KK invariant mass (with K_pt cuts)\n" + 
+	     "4. Fit KK invariant mass\n" + 
+	     "5. Phi Candidate plot\n" +
+	     "6. Phi candidate plot with Zoom\n" + 
+	     "ENTER: 1-5 Plots\n" + 
+	     "Press \"q\" to EXIT.\n").split()
 
 if "q" not in lang:
 	print("Processing...") 
@@ -326,20 +364,21 @@ if "q" not in lang:
 	# Start timer
 start = time()
 
-if not lang:	#print all plots
+if not lang:	# print all plots
 
-		kaonL_pt()
-		kaonS_pt()
-		m_kk()					
-		m_kk_fit()			#save to .root
-		mumukk()			#save to .root
+	kaonL_pt()
+	kaonS_pt()
+	m_kk()					
+	m_kk_fit()			#save to .root
+	mumukk()			#save to .root
 else:
 	for i in lang:
 	
 		#	avoid misdigit
 		while i not in "1 2 3 4 5 6 q":
 			i = input(f"\"{i}\" is not valid. Please insert a valid key: ")
-		
+
+		#	execution
 		if i == "1":	kaonL_pt()
 		if i == "2":	kaonS_pt()
 		if i == "3":	m_kk()
@@ -349,7 +388,7 @@ else:
 		if i == "q":
 			print ("Bye Bye")
 			exit()
-		
+	#_____________________________________ END OF LOOP
 
 """
 ################ for python version >= 3.10
