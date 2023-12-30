@@ -10,7 +10,7 @@ It exploit the PyROOT package and its structure follows 3 sections:
  	2. Core  - Definition of 'Plot functions': each plot is associated to a function that will be executed
   	3. Menu  - Implementation of a menu to select plots by command line
 
-Execution: simply type `python3 CandAnalysis.py` from command line
+Execution: simply type `python3 CandAnalysis.py` from command line, plus arguments (see TREES READING section)
 
 """
 
