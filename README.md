@@ -107,10 +107,10 @@ In the end, I imported the `time` function because I was interested in the compu
 
 In the middle part of the code, the plot functions are defined. 
 
-I implemented a standard function `cprint` to simply draw and save a histogram which plots one of the columns of the dataframe.
+I implemented a standard function `cprint()` to simply draw and save a histogram which plots one of the columns of the dataframe.
 
 In general, histograms were made using the RooFit package: 
-`Histo1D` or `Histo2D` of the RDataFrame class are used as standard methods to print simple histograms, while to perform the fit of a histogram, RDataFrame is pythonized into a RooDataSet through the method `from_numpy`.
+`Histo1D()` or `Histo2D()` of the RDataFrame class are used as standard methods to print simple histograms, while to perform the fit of a histogram, RDataFrame is pythonized with the method `AsNumpy()`, then turned into a RooDataSet through the method `from_numpy()`.
 
 [//] # insert examples plots 
 
