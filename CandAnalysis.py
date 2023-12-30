@@ -11,7 +11,6 @@ import declarations
 
 
 
-
 #	PLOT TEMPLATE
 def cprint (hist, name, opt="", stats=False):
 	title= "Y2S "+name
