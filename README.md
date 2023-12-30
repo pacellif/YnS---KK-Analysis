@@ -6,7 +6,7 @@ The latter contains all the event collections which are useful to detect the pro
 In particular, dimuons in the range of $\Upsilon(2S)$ are selected, as it is done for ditracks in range of $\phi$. Then, all these objects were attached together to form the *candidate*. 
 The CMSSW producer is responsible for this process and save all the objects involved, then CMSSW rootupler unpacks the kinematic quantities and vertex information in a .root file. 
 
-This tool reads the rootuples and provides a large variety of plots that simply show distributions of specific quantities (such as p~T~, pseudorapidity and more) or allow to work on the mass spectra of the $\Upsilon$, the $\phi$ and of the whole candidate.
+This tool reads the rootuples and provides a large variety of plots that simply show distributions of specific quantities (such as $p_T$, pseudorapidity and more) or allow to work on the mass spectra of the $\Upsilon$, the $\phi$ and of the whole candidate.
 
 The spectrum in *Figure 1* represents the first three excited states of $\Upsilon$, for which I will focus only on the second peak. 
 The $\phi$ spectrum is extracted from the ditrack, which are assumed to be pairs of $K^+K^-$, since CMS can not do PID for this kind of objects. 
@@ -112,7 +112,11 @@ I implemented a standard function `cprint()` to simply draw and save a histogram
 In general, histograms were made using the RooFit package: 
 `Histo1D()` or `Histo2D()` of the RDataFrame class are used as standard methods to print simple histograms, while to perform the fit of a histogram, RDataFrame is pythonized with the method `AsNumpy()`, then turned into a RooDataSet through the method `from_numpy()`.
 
-[//] # insert examples plots 
+In figure, there are two examples of plots: the first is the fit of the $phi$ invariant mass, while the second is the representation of the $\Upsilon(2S)\;p_T$.
+
+![fit] (file:///home/pacelli/tesi/allplots_cand/PhiMassPlot.pdf)
+
+![histo] (file:///home/pacelli/tesi/ups_plots/pt.pdf)
 
 
 ### 3. The interface
