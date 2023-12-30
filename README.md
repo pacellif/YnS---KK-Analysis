@@ -6,7 +6,7 @@ The latter contains all the event collections which are useful to detect the pro
 In particular, dimuons in the range of $\Upsilon(2S)$ are selected, as it is done for ditracks in range of $\phi$. Then, all these objects were attached together to form the *candidate*. 
 The CMSSW producer is responsible for this process and save all the objects involved, then CMSSW rootupler unpacks the kinematic quantities and vertex information in a .root file. 
 
-This tool reads the rootuples and provides a large variety of plots that simply show distributions of specific quantities (such as p~T~, pseudorapidity and more) or allow to work on the mass spectra of the $\Upsilon$, the $\phi$ and of the whole candidate.
+This tool reads the rootuples and provides a large variety of plots that simply show distributions of specific quantities (such as $p_T$, pseudorapidity and more) or allow to work on the mass spectra of the $\Upsilon$, the $\phi$ and of the whole candidate.
 
 The spectrum in *Figure 1* represents the first three excited states of $\Upsilon$, for which I will focus only on the second peak. 
 The $\phi$ spectrum is extracted from the ditrack, which are assumed to be pairs of $K^+K^-$, since CMS can not do PID for this kind of objects. 
@@ -83,7 +83,7 @@ Each of the two macro can be divided in three parts:
 2. The second part contains the definition of functions which will draw and save all the plots for the analysis (_plot functions_).
 3. In the last part, it is implemented an interface that allows to choose which plots to print.
 
-### 1. Starting
+### 1. Setup
 
 The libraries and modules imported by the program there are
 ```py
