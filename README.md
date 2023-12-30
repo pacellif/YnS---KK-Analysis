@@ -35,21 +35,21 @@ It is possible to download the repository from terminal with the command
 cd $HOME
 git clone https://github.com/pacellif/YnS-KK-Analysis.git
 ```
-In the repository there are the README.md, the .py scripts and modules, an empty directory where to store the files, a .txt file where to write the paths of the rootuples.
+In the repository there are the README.md, the .py scripts and modules, a directory to store the data, which already contains a .txt file where to write the entire paths of the rootuples.
 
 
 ### Download the data
 
-Since the .root files overcome the maximum size for the upload on GitHub, I stored a sample of 10 files on CERNBox folder (about 2 GB). They must be downloaded by accessing with LXplus username and password and using the command
+Since the .root files overcome the maximum size for the upload on GitHub, I stored a sample of 10 files on CERNBox folder (about 190 MB each). They must be downloaded by accessing with LXplus username and password and using the command
 
 ```
 cd YnS-KK-Analysis
-scp <username>@lxplus.cern.ch:/eos/user/f/fpacelli/data/*.root /_data
+scp <username>@lxplus.cern.ch:/eos/user/f/fpacelli/data/*.root /data
 ```
 
 Before running the scripts, fill the file `Y2SPhiRun2List.txt` by typing from command-line
 ```
-ls $PWD/_data/*.root > Y2SPhiRun2List.txt
+ls $PWD/data/*.root > data/Y2SPhiRun2List.txt
 ```
 
 Now you are ready to proceed.

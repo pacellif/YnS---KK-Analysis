@@ -16,7 +16,7 @@ ROOT.gROOT.SetBatch(True)
 #	- open .root dataset: it is possible to select a subset
 #	- make custom directories in which store plots and .root files
 
-with open('Y2SPhiRun2List.txt') as f:
+with open('data/Y2SPhiRun2List.txt') as f:
     allFiles = f.readlines()
     f.close()
 
@@ -108,8 +108,9 @@ def mu_pt():
 
 def m_Y2S():
 
+		# apply some filters to the dataset
 	hist = dataY2S\
-	.Filter("ups_vMass > 9.6 & ups_vMass < 10.3")\	#apply some filters
+	.Filter("ups_vMass > 9.6 & ups_vMass < 10.3")\
 	.Filter("ups_pT > 15")\
 	.Histo1D(("dimuon invariant mass", "Y(2S) #rightarrow #mu^{+}#mu^{-};m(#mu^{+}#mu^{-}) [GeV];Counts", 500, 9.6, 10.3), "ups_vMass")
 	

@@ -24,7 +24,7 @@ def cprint (hist, name, opt="", stats=False):
 
 
 
-with open('Y2SPhiRun2List.txt') as f:
+with open('data/Y2SPhiRun2List.txt') as f:
     allFiles = f.readlines()
     f.close()
 
