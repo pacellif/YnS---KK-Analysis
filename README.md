@@ -128,17 +128,15 @@ Actually, the initial prospect was to work from remote on LXplus without downloa
 
 For this reason, it could be useful to try solving that issue in order to work entirely from remote. 
 
-![pt](https://i.ibb.co/85HBDZ5/pt-1.png)
-|---|
+Here below, two examples of plots are shown, in particular a histogram and a fit.
 
-Figure 1: $\Upsilon$ spectrum from the dimuon invariant mass
-|--|
+<img src="https://i.ibb.co/85HBDZ5/pt-1.png" width="500" height="500" />
 
 
 ![KKMass](https://i.ibb.co/Rp4rWpN/Phi-Mass-Plot-1.png)
 |---|
 
-Figure 2: $\phi$ spectrum from the ditrack invariant mass. In the framework, ditracks are assumed to be Kaons.
+Figure 3: Examples of plots: on the top, $p_t$ spectrum of the di-muon; at the bottom, fit of the $\phi$ invariant mass.
 |-----|
 
 
