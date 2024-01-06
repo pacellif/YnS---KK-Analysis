@@ -128,14 +128,14 @@ Actually, the initial prospect was to work from remote on LXplus without downloa
 
 For this reason, it could be useful to try solving that issue in order to work entirely from remote. 
 
-![pt](https://app.gemoo.com/share/image-annotation/602374472577011712?codeId=v62W7KYmybXB9&origin=imageurlgenerator&card=602374470567940096)
+![pt](https://i.ibb.co/85HBDZ5/pt-1.png)
 |---|
 
 Figure 1: $\Upsilon$ spectrum from the dimuon invariant mass
 |--|
 
 
-![KKMass](https://app.gemoo.com/share/image-annotation/602375059171401728?codeId=v62W7KYmybXB9)
+![KKMass](https://i.ibb.co/Rp4rWpN/Phi-Mass-Plot-1.png)
 |---|
 
 Figure 2: $\phi$ spectrum from the ditrack invariant mass. In the framework, ditracks are assumed to be Kaons.
