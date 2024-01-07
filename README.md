@@ -40,11 +40,10 @@ In the repository there are the README.md, the .py scripts and modules, a direct
 
 ### Download the data
 
-Since the .root files overcome the maximum size for the upload on GitHub, I stored a sample of 10 files on CERNBox folder (about 190 MB each). They must be downloaded by accessing with LXplus username and password and using the command
+Since the .root files overcome the maximum size for the upload on GitHub, I stored a sample of 10 files on CERNBox folder (about 190 MB each). They must be downloaded from this link
 
 ```
-cd YnS-KK-Analysis
-scp <username>@lxplus.cern.ch:/eos/user/f/fpacelli/data/*.root /data
+https://cernbox.cern.ch/s/n8MQnt0WiJF8zGC
 ```
 
 Before running the scripts, fill the file `Y2SPhiRun2List.txt` by typing from command-line
