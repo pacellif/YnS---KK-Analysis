@@ -40,11 +40,10 @@ In the repository there are the README.md, the .py scripts and modules, a direct
 
 ### Download the data
 
-Since the .root files overcome the maximum size for the upload on GitHub, I stored a sample of 10 files on CERNBox folder (about 190 MB each). They must be downloaded by accessing with LXplus username and password and using the command
+Since the .root files overcome the maximum size for the upload on GitHub, I stored a sample of 10 files on CERNBox folder (about 190 MB each). They must be downloaded from this link
 
 ```
-cd YnS-KK-Analysis
-scp <username>@lxplus.cern.ch:/eos/user/f/fpacelli/data/*.root /data
+https://cernbox.cern.ch/s/n8MQnt0WiJF8zGC
 ```
 
 Before running the scripts, fill the file `Y2SPhiRun2List.txt` by typing from command-line
@@ -128,17 +127,15 @@ Actually, the initial prospect was to work from remote on LXplus without downloa
 
 For this reason, it could be useful to try solving that issue in order to work entirely from remote. 
 
-![pt](https://app.gemoo.com/share/image-annotation/602374472577011712?codeId=v62W7KYmybXB9&origin=imageurlgenerator&card=602374470567940096)
+Here below, two examples of plots are shown, in particular a histogram and a fit.
+
+<img src="https://i.ibb.co/85HBDZ5/pt-1.png" width="500" height="500" />
+
+
+![KKMass](https://i.ibb.co/Rp4rWpN/Phi-Mass-Plot-1.png)
 |---|
 
-Figure 1: $\Upsilon$ spectrum from the dimuon invariant mass
-|--|
-
-
-![KKMass](https://app.gemoo.com/share/image-annotation/602375059171401728?codeId=v62W7KYmybXB9)
-|---|
-
-Figure 2: $\phi$ spectrum from the ditrack invariant mass. In the framework, ditracks are assumed to be Kaons.
+Figure 3: Examples of plots: on the top, $p_t$ spectrum of the di-muon; at the bottom, fit of the $\phi$ invariant mass.
 |-----|
 
 
