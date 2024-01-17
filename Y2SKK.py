@@ -77,15 +77,9 @@ def cprint (hist, name, opt="", stats=False, r = fileroot ):
 	hist.Draw(opt)
 		
 	c.SaveAs(d+"/"+name+".pdf")
-	#os.system(f"xdg-open {d}/"+name+".pdf")
 	r.WriteObject(c, title)
 #------------------------------------------------------------------
-def binCount (var, rangeName):
-	varBinning = var.getBinning()
-	a = var.getRange(rangeName)[0]
-	b = var.getRange(rangeName)[1]
-	nbins = varBinning.binNumber(b) - varBinning.binNumber(a)
-	return nbins
+
 	
 #------------------------------------------------------------------	
 #	OPEN THE SAMPLE
@@ -125,7 +119,6 @@ def mu_pt():
 
 	c.SaveAs(d+"/muonPTdistribution.pdf")
 	fileroot.WriteObject(c,"MuonPT")
-#	os.system(f"xdg-open {d}/muonPTdistribution.pdf")
 	
 #___________________________________________________________ END OF DEF
 
@@ -216,11 +209,6 @@ def fit_Y2S():
 		
 	fitResult = model.fitTo(mumuroohist, Range="range", Save=True)
 
-#		#chi squared
-#	chiSquared = int(-2 * fitResult.minNll())
-#	ndof = binCount(upsmass,"range") - model.getParameters(mumuroodata).getSize()
-
-#	reducedChiSquared = round(chiSquared/ndof)
 
 	########	PLOTTING	···········································
 	mumuroohist.plotOn(xframe,LineColor="b",MarkerSize=0.3)
@@ -252,7 +240,6 @@ def fit_Y2S():
 	c.SaveAs(d+"/MassPlotY2S.pdf")
 	fileroot.WriteObject(xframe,"UpsInvMass")
 	
-	#os.system(f"xdg-open {d}/MassPlotY2S.pdf")
 #______________________________________________________________ END OF DEF
 
 ####################	TRANSVERSAL MOMENTUM PLOTS
@@ -286,7 +273,6 @@ def Y_pt ():
 	hist16.Draw("same")
 
 	c_pt.SaveAs(d+"/pt.pdf")
-	#os.system(f"xdg-open {d}/pt.pdf")
 	fileroot.WriteObject(c_pt,"UpsilonPT")
 #_____________________________________________________________ END OF DEF
 
@@ -301,7 +287,6 @@ def Y_vProb():
 	
 	p_hist.Draw()
 	c_p.SaveAs(d+"/prob.pdf")
-	#os.system(f"xdg-open {d}/prob.pdf")
 	fileroot.WriteObject(c_p,"Ups_vertex_prob")
 #_____________________________________________________________ END OF DEF
 
@@ -334,7 +319,6 @@ def Y_rap():
 
 	c_rap.SaveAs(d+"/rapidity.pdf")
 	fileroot.WriteObject(c_rap,"UpsilonRapidity")
-	#os.system(f"xdg-open {d}/rapidity.pdf")
 #_____________________________________________________________ END OF DEF
 
 #	PSEUDRAPIDITY PLOT	##############################
@@ -366,7 +350,6 @@ def Y_pseudorap():
 
 	c.SaveAs(d+"/Pseudorapidity.pdf")
 	fileroot.WriteObject(c,"Ups_Pseudorapidity")
-	#os.system(f"xdg-open {d}/Pseudorapidity.pdf")
 #_____________________________________________________________ END OF DEF
 
 

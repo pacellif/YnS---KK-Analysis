@@ -61,7 +61,6 @@ p = ROOT.TFile.Open(d+"/cand_plots.root","RECREATE")
 
 #	PLOT TEMPLATE
 def cprint (hist, path, name, opt="", stats=False, root = p):
-	#title= "Y2S "+name
 	c = ROOT.TCanvas(name, name)
 	
 	if stats==False: hist.SetStats(0)
