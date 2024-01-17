@@ -24,7 +24,7 @@ from sys import argv
 from definitions import UpsTreeDefinitions
 import declarations
 
-ROOT.gROOT.SetBatch(True)
+##ROOT.gROOT.SetBatch(True)
 #ROOT.ROOT.EnableImplicitMT(4)
 
 
@@ -58,10 +58,18 @@ except ValueError:			# in case argv[1] is a string: open all files
 if not os.path.isdir(f"./{d}/"):	# check if the directory exists,	
 	os.system(f"mkdir {d}")			# otherwise create one
 
+#	CREATION OF FILE ROOT TO STORE ALL PLOTS
+
+fileroot = ROOT.TFile.Open("ups_plots.root","RECREATE")
 
 
 #	PLOT TEMPLATES	-------------------------------------------------|
-def cprint (hist, name, opt="", stats=False):
+#	this function simplifies the printing process for standard plots:
+#		1. Draws plot
+#		2. Saves .pdf
+#		3. Writes to root file
+
+def cprint (hist, name, opt="", stats=False, r = fileroot ):
 	title= "Y2S "+name
 	c = ROOT.TCanvas(title, title)
 	
@@ -69,7 +77,8 @@ def cprint (hist, name, opt="", stats=False):
 	hist.Draw(opt)
 		
 	c.SaveAs(d+"/"+name+".pdf")
-	os.system(f"xdg-open {d}/"+name+".pdf")
+	#os.system(f"xdg-open {d}/"+name+".pdf")
+	r.WriteObject(c, title)
 #------------------------------------------------------------------
 def binCount (var, rangeName):
 	varBinning = var.getBinning()
@@ -85,8 +94,6 @@ def binCount (var, rangeName):
 print("Creating Dataset...")
 dataY2S = UpsTreeDefinitions(ROOT.RDataFrame("rootuple/UpsTree",sample))
 
-
-fileroot = ROOT.TFile.Open("ups_mass.root","RECREATE")
 
 #------------------------------------------------------------------	
 #	DEFINITIONS OF THE PLOT FUNCTIONS
@@ -118,7 +125,8 @@ def mu_pt():
 
 	c.SaveAs(d+"/muonPTdistribution.pdf")
 	fileroot.WriteObject(c,"MuonPT")
-	os.system(f"xdg-open {d}/muonPTdistribution.pdf")
+#	os.system(f"xdg-open {d}/muonPTdistribution.pdf")
+	
 #___________________________________________________________ END OF DEF
 
 #	MASS PLOT
@@ -235,13 +243,13 @@ def fit_Y2S():
 	c.Divide(1,2)
 	c.cd(1)
 	xframe.Draw()
-	text_box.Draw()
+#	text_box.Draw()
 	c.cd(2)
 	xframe.pullHist().Draw()	#pull histogram
 
 	fileroot.WriteObject(c,"UpsInvMass")
 	c.SaveAs(d+"/MassPlotY2S.pdf")
-	os.system(f"xdg-open {d}/MassPlotY2S.pdf")
+	#os.system(f"xdg-open {d}/MassPlotY2S.pdf")
 #______________________________________________________________ END OF DEF
 
 ####################	TRANSVERSAL MOMENTUM PLOTS
@@ -275,7 +283,8 @@ def Y_pt ():
 	hist16.Draw("same")
 
 	c_pt.SaveAs(d+"/pt.pdf")
-	os.system(f"xdg-open {d}/pt.pdf")
+	#os.system(f"xdg-open {d}/pt.pdf")
+	fileroot.WriteObject(c_pt,"UpsilonPT")
 #_____________________________________________________________ END OF DEF
 
 ###########		PROBABILITY PLOT	###############
@@ -289,7 +298,8 @@ def Y_vProb():
 	
 	p_hist.Draw()
 	c_p.SaveAs(d+"/prob.pdf")
-	os.system(f"xdg-open {d}/prob.pdf")
+	#os.system(f"xdg-open {d}/prob.pdf")
+	fileroot.WriteObject(c_p,"Ups_vertex_prob")
 #_____________________________________________________________ END OF DEF
 
 ##########		RAPIDITY PLOT	###########
@@ -320,7 +330,8 @@ def Y_rap():
 	hist16.Draw("same")
 
 	c_rap.SaveAs(d+"/rapidity.pdf")
-	os.system(f"xdg-open {d}/rapidity.pdf")
+	fileroot.WriteObject(c_rap,"UpsilonRapidity")
+	#os.system(f"xdg-open {d}/rapidity.pdf")
 #_____________________________________________________________ END OF DEF
 
 #	PSEUDRAPIDITY PLOT	##############################
@@ -351,7 +362,8 @@ def Y_pseudorap():
 	hist16.Draw("same")
 
 	c.SaveAs(d+"/Pseudorapidity.pdf")
-	os.system(f"xdg-open {d}/Pseudorapidity.pdf")
+	fileroot.WriteObject(c,"Ups_Pseudorapidity")
+	#os.system(f"xdg-open {d}/Pseudorapidity.pdf")
 #_____________________________________________________________ END OF DEF
 
 
@@ -391,15 +403,15 @@ def dimuon_decay():
 #	(since plot functions have no arguments, it reduces the code)
 
 compute = {	"1" : mu_pt,
-		"2" : m_Y2S,
-		"3" : fit_Y2S,
-		"4" : Y_pt,		
-		"5" : Y_vProb,		
-		"6" : Y_rap,
-		"7" : Y_pseudorap,
-		"8" : dimuon_decay,
-		"q" : exit
-	  }
+			"2" : m_Y2S,
+			"3" : fit_Y2S,
+			"4" : Y_pt,		
+			"5" : Y_vProb,		
+			"6" : Y_rap,
+			"7" : Y_pseudorap,
+			"8" : dimuon_decay,
+			"q" : exit
+	 	 }
 
 	
 lang = input("\nSelect plots (Separate by spacing):\n" + 
@@ -422,6 +434,8 @@ if "q" not in lang:
 start = time()
 
 if not lang:	#print all plots		
+	
+	compute.popitem() # avoid exiting before the TBrowser	
 	for func in compute.values() : func()
 
 else:			#print only selected-by-key plots
@@ -443,6 +457,21 @@ end = time()
 elapsed = end - start
 print("\nComputing time: ", elapsed, "\n") 
 
+#	close the .root file
 
-fileroot.Close()
+#fileroot.Close()
+
+#	open the file with the TBrowser
+
+b = ROOT.TBrowser()
+fileroot.Browse(b)
+
+ROOT.gApplication.Run()	#	allow to interact with the graphic interface
+
+#	TO CLOSE THE INTERFACE AND END THE SCRIPT HIT 
+#	CTRL + Q
+
+
+
+
 
