@@ -60,7 +60,7 @@ if not os.path.isdir(f"./{d}/"):	# check if the directory exists,
 
 #	CREATION OF FILE ROOT TO STORE ALL PLOTS
 
-fileroot = ROOT.TFile.Open("ups_plots.root","RECREATE")
+fileroot = ROOT.TFile.Open(d+"/ups_plots.root","RECREATE")
 
 
 #	PLOT TEMPLATES	-------------------------------------------------|
@@ -243,12 +243,15 @@ def fit_Y2S():
 	c.Divide(1,2)
 	c.cd(1)
 	xframe.Draw()
-#	text_box.Draw()
+	
 	c.cd(2)
-	xframe.pullHist().Draw()	#pull histogram
-
-	fileroot.WriteObject(c,"UpsInvMass")
+	pullframe = xframe.pullHist()	#pull histogram
+	pullframe.Draw()
+	
+	
 	c.SaveAs(d+"/MassPlotY2S.pdf")
+	fileroot.WriteObject(xframe,"UpsInvMass")
+	
 	#os.system(f"xdg-open {d}/MassPlotY2S.pdf")
 #______________________________________________________________ END OF DEF
 
@@ -457,9 +460,6 @@ end = time()
 elapsed = end - start
 print("\nComputing time: ", elapsed, "\n") 
 
-#	close the .root file
-
-#fileroot.Close()
 
 #	open the file with the TBrowser
 

@@ -21,27 +21,12 @@ Execution: simply type `python3 CandAnalysis.py` from command line, plus argumen
 print("\n^^^^^^^^\tY(2S)->µµ + Phi->KK SPECTRUM ANALYSER\t^^^^^^^^\n\nImporting modules...")
 
 import ROOT
-ROOT.gROOT.SetBatch(True)
-
 from time import time
 import os
 from sys import argv
 from definitions import CandTreeDefinitions
 import declarations
 
-
-
-#	PLOT TEMPLATE
-def cprint (hist, name, opt="", stats=False):
-	title= "Y2S "+name
-	c = ROOT.TCanvas(title, title)
-	
-	if stats==False: hist.SetStats(0)
-	hist.Draw(opt)
-		
-	c.SaveAs(name+".pdf")
-	os.system("xdg-open "+name+".pdf")
-#_____________________________________________ END OF DEF
 
 #	FILES PATH READER
 
@@ -68,18 +53,31 @@ except ValueError:
 	d = argv[1]
 											
 if not os.path.isdir(f"./{d}/"):			
-	os.system(f"mkdir {d}")							
-
+	os.system(f"mkdir {d}")		
+	
 # create a root file to store and edit plots, if necessary			
-p = ROOT.TFile.Open(d+"/cand.root","RECREATE")		
+p = ROOT.TFile.Open(d+"/cand_plots.root","RECREATE")		
 												
+
+#	PLOT TEMPLATE
+def cprint (hist, path, name, opt="", stats=False, root = p):
+	#title= "Y2S "+name
+	c = ROOT.TCanvas(name, name)
+	
+	if stats==False: hist.SetStats(0)
+	hist.Draw(opt)
+		
+	c.SaveAs(path+name+".pdf")
+	root.WriteObject(c, name)
+#_____________________________________________ END OF DEF
+					
 
 #	OPEN THE SAMPLE
 		
 print("Creating Dataset...")
 
 dataY2SKK = CandTreeDefinitions\
-(ROOT.RDataFrame("rootuple/CandidateTree",sample))#
+(ROOT.RDataFrame("rootuple/CandidateTree",sample))
 
 
 #	KK filters to compare the distribution of interest (K+K-) with 
@@ -97,14 +95,14 @@ dataKKws = dataY2SKK.Filter("track1_charge * track2_charge > 0")
 
 def kaonL_pt ():
 	hist = dataKKrs.Histo1D(("Leading Kaon", "#phi #rightarrow K^{+}K^{-};p_{T}(K^{L}) [GeV];Counts", 200, 0., 3.), "trackL_pT")
-	cprint(hist, d+"/LeadingK", stats=True)
+	cprint(hist, d+"/","LeadingK", stats=True)
 #_______________________________________________________ END OF DEF
 
 # 	SOFT KAON PT PLOT
 
 def kaonS_pt():
 	hist = dataKKrs.Histo1D(("Soft Kaon", "#phi #rightarrow K^{+}K^{-};p_{T}(K^{soft}) [GeV];Counts", 200, 0., 2.), "trackS_pT")
-	cprint(hist, d+"/SoftK", stats=True)
+	cprint(hist, d+"/", "SoftK", stats=True)
 #_______________________________________________________ END OF DEF
 
 #	KK INVARIANT MASS PLOT, WITH CUTS
@@ -145,11 +143,11 @@ def m_kk():
 
 	c0.Draw("")
 	c0.SaveAs(d+"/MassKK.pdf")
-	os.system(f"xdg-open {d}/MassKK.pdf")
+	p.WriteObject(c0,"MassKK")
 	
 		 # display only last cut
 	hists[-1].SetTitle("#phi #rightarrow K^{+}K^{-}: p_{T}(K^{L}) > 1.0, p_{T}(K^{S}) > 0.8")
-	cprint(hists[-1], d+"/MassKK_lastcut")
+	cprint(hists[-1], d+"/", "MassKK_lastcut")
 #___________________________________________________________ END OF DEF	
 
 
@@ -192,8 +190,8 @@ def m_kk_fit(ptL = 1.2, ptS = 1.0):
 	sigma.setConstant(1)		# fixed res from MC????????
 
 		#	Chebyshev coefficients
-	f0 = ROOT.RooRealVar("f0", "f0", 0.2, -1, 1)
-	f1 = ROOT.RooRealVar("f1", "f1", -0.05, -1, 1)
+	f0 = ROOT.RooRealVar("f0", "f0", 0.2, 0., 2.)
+	f1 = ROOT.RooRealVar("f1", "f1", -0.05, -2., 0.)
 
 		#	Number of events
 	Nbkg = ROOT.RooRealVar("N_{bkg}", "N bkg events", 50, 0., entries)
@@ -209,34 +207,37 @@ def m_kk_fit(ptL = 1.2, ptS = 1.0):
 	model.fitTo(kkroohist)
 		
 		# print
-	c0 = ROOT.TCanvas("canvas0", "canvas0", 1200, 600)
+	c0 = ROOT.TCanvas()
 
 	kkroohist.plotOn(phiframe)
 	model.plotOn(phiframe) # By default only fitted range is shown
 	model.plotOn(phiframe, Components={sig}, LineStyle=":", LineColor="r")
 	model.plotOn(phiframe, Components={bkg}, LineStyle=":", LineColor="g")
-	model.paramOn(phiframe, ROOT.RooFit.Parameters([mean, width, Nbkg, Nsig]), ROOT.RooFit.Layout(0.65, 0.9, 0.9))
+	model.paramOn(phiframe, ROOT.RooFit.Parameters([mean, width, Nbkg, Nsig, f0, f1]), ROOT.RooFit.Layout(0.65, 0.9, 0.9))
 
 		# create boundaries and highlight them with lines
 	xmin = mean.getVal() - 2*quadrature(width.getVal()/2, sigma.getVal())
 	xmax = mean.getVal() + 2*quadrature(width.getVal()/2, sigma.getVal())
 
-	line0 = ROOT.TLine(xmin, 0., xmin, 10000)
-	line1 = ROOT.TLine(xmax, 0., xmax, 10000)
-	line0.SetLineStyle(2)
-	line0.SetLineColor(7)
-	line0.SetLineWidth(4)
-	line1.SetLineStyle(2)
-	line1.SetLineColor(7)
-	line1.SetLineWidth(4)
+#		to highlight the boundaries of the signal uncomment and set an adequate height
+
+#	line0 = ROOT.TLine(xmin, 0., xmin, 10000) 	
+#	line1 = ROOT.TLine(xmax, 0., xmax, 10000)
+#	line0.SetLineStyle(2)
+#	line0.SetLineColor(7)
+#	line0.SetLineWidth(4)
+#	line1.SetLineStyle(2)
+#	line1.SetLineColor(7)
+#	line1.SetLineWidth(4)
 
 	phiframe.Draw()
-	line0.Draw("same")
-	line1.Draw("same")
-	c0.Draw()
-	p.WriteObject(c0,"phi_mass_fit")
+#	line0.Draw("same")
+#	line1.Draw("same")
+	
+		# print and save
+
+	p.WriteObject(phiframe,"phi_mass_fit")
 	c0.SaveAs(d+"/PhiMassPlot.pdf")
-	os.system(f"xdg-open {d}/PhiMassPlot.pdf") 
 #___________________________________________________________ END OF DEF
 
 	
@@ -309,7 +310,6 @@ def mumukk(zoom = False):
 	legend.Draw("")
 	c0.Draw("")
 	c0.SaveAs(d+"/PhiCandidate.pdf")
-	os.system(f"xdg-open {d}/PhiCandidate.pdf")
 	
 	p.WriteObject(c0,"phi_candidate")
 
@@ -337,7 +337,6 @@ def mumukk(zoom = False):
 		c0.SaveAs(d+"/PhiCandidateZoom.pdf")
 		
 		p.WriteObject(c0,"phi_candidate(zoom)")
-		os.system(f"xdg-open {d}/PhiCandidateZoom.pdf")
 #___________________________________________________________ END OF DEF
 
 #----------------------------------------------------------------------
@@ -417,7 +416,16 @@ end = time()
 elapsed = end - start
 print("\nComputing time: ", elapsed, "\n") 
 
-p.Close()
 
+
+#	open the file with the TBrowser
+
+b = ROOT.TBrowser()
+p.Browse(b)
+
+ROOT.gApplication.Run()	#	allow to interact with the graphic interface
+
+#	TO CLOSE THE INTERFACE AND END THE SCRIPT HIT 
+#	CTRL + Q
 
 
