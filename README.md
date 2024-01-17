@@ -1,9 +1,9 @@
 # Analysis of $\Upsilon(2S)$ + $\phi$ spectrum
 
 In this framework I am presenting the script I wrote for an analysis about the searching of possible resonances in the spectrum of the $\Upsilon(2S) \rightarrow \mu\mu + \phi \rightarrow KK$. 
-All data was collected at CMS during the Run2, elaborated and stored in the _MuOnia_ dataset. 
-The latter contains all the event collections which are useful to detect the production of quarkonium states ($J/\Psi$, $\Upsilon$, etc.) through the reconstruction of dimuons. 
-In particular, dimuons in the range of $\Upsilon(2S)$ are selected, as it is done for ditracks in range of $\phi$. Then, all these objects were attached together to form the *candidate*. 
+All data was collected at CMS during the Run2, elaborated and stored in the _b-Parking_ dataset. 
+It contains a fraction of triggered events which are interesting for the b-physics, but whose reconstruction was delayed to give the priority to other trigger data. From this dataset, the analysed event collections are triggered by the presence of dimuons with specific selection criteria aimed to search for quarkonium states, such as $J/\Psi$, $\Upsilon$, etc. 
+In particular, dimuons in the range of $\Upsilon(2S)$ are selected, as it is done for ditracks in range of $\phi$ coming from the same vertex. Then, all these objects were attached together to form the *candidate*. 
 The CMSSW producer is responsible for this process and save all the objects involved, then CMSSW rootupler unpacks the kinematic quantities and vertex information in a .root file. 
 
 This tool reads the rootuples and provides a large variety of plots that simply show distributions of specific quantities (such as $p_T$, pseudorapidity and more) or allow to work on the mass spectra of the $\Upsilon$, the $\phi$ and of the whole candidate.
@@ -40,14 +40,12 @@ In the repository there are the README.md, the .py scripts and modules, a direct
 
 ### Download the data
 
-Since the .root files overcome the maximum size for the upload on GitHub, I stored a sample of 10 files on CERNBox folder (about 190 MB each). They must be downloaded from this link
+Since the .root files overcome the maximum size for the upload on GitHub, I stored a sample of 10 files in a [CERNBox repository](https://cernbox.cern.ch/s/n8MQnt0WiJF8zGC) (about 190 MB each).
+They must be downloaded and unzipped in a specific repository: it is recommended to unzip into the directory `data`, already included with the git repository. 
 
+Before running the scripts, __it is necessary to fill the file__ `Y2SPhiRun2List.txt` by typing from command-line
 ```
-https://cernbox.cern.ch/s/n8MQnt0WiJF8zGC
-```
-
-Before running the scripts, fill the file `Y2SPhiRun2List.txt` by typing from command-line
-```
+cd YnS-KK-Analysis
 ls $PWD/data/*.root > data/Y2SPhiRun2List.txt
 ```
 
@@ -97,7 +95,8 @@ Right after, the `Y2SPhiRun2List.txt` is read, and all its lines are trimmed and
 In order to execute only a sample of the whole dataset and speed up the debugging of the code or the correction of the plots, it is possible to pass an integer _N_ as command line argument, selecting the first _N_ .root files to open. At the end of the program, all the saved plots are stored in a directory named "test".
 Alternatively, a string can be passed as command line argument, as the name of a different storing folder for the plots. This option is meant to be chosen when the code is correclty working and ready to analyse the whole dataset.
 
-At this point, the sample of rootuples is passed as argument of RDataFrame constructor. Together with the dataframe, a TFile is opened to save the most elaborated plots, so that it is possible to access and edit them through the TBrowser or by the line command `rootbrowse <fileroot>.root`.
+At this point, the sample of rootuples is passed as argument of RDataFrame constructor. 
+Together with the dataframe, a TFile in "RECREATE" mode is opened to save the plots in .root format, so that it is possible to display and edit them through the TBrowser implemented at the end of the script or by the line command `rootbrowse <fileroot>.root`.
 
 In the end, I imported the `time` function because I was interested in the computing time.
 
@@ -116,7 +115,7 @@ The interface is designed to allow the user to select which plots to work on. A 
 
 In case there is a non-valid key inserted, it is possible to correct it thanks to a while loop.
 
-At the end of the last part the computing time is displayed in the terminal.
+At the end of the last part the computing time is displayed in the terminal and a TBrowser interface is opened, listing all the drawed plots.
 
 ## Summary and conclusions
 
