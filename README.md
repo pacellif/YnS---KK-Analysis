@@ -41,7 +41,8 @@ In the repository there are the README.md, the .py scripts and modules, a direct
 ### Download the data
 
 Since the .root files overcome the maximum size for the upload on GitHub, I stored a sample of 10 files in a [CERNBox repository](https://cernbox.cern.ch/s/n8MQnt0WiJF8zGC) (about 190 MB each).
-They must be downloaded and unzipped in a specific repository: it is recommended to unzip into the directory `data`, already included with the git repository. 
+They must be downloaded and unzipped in the specific directory `data`, already included with the git repository.
+In this directory, a file named `Y2SPhiRun2List.txt` is present.
 
 Before running the scripts, __it is necessary to fill the file__ `Y2SPhiRun2List.txt` by typing from command-line
 ```
@@ -49,7 +50,7 @@ cd YnS-KK-Analysis
 ls $PWD/data/*.root > data/Y2SPhiRun2List.txt
 ```
 
-Now you are ready to proceed.
+Now you are ready to proceed with the analysis.
 
 ## The framework
 
@@ -115,7 +116,7 @@ The interface is designed to allow the user to select which plots to work on. A 
 
 In case there is a non-valid key inserted, it is possible to correct it thanks to a while loop.
 
-At the end of the last part the computing time is displayed in the terminal and a TBrowser interface is opened, listing all the drawed plots.
+At the end of the last part the computing time is displayed in the terminal and a TBrowser interface is opened, listing all the drawn plots.
 
 ## Summary and conclusions
 
