@@ -67,7 +67,7 @@ def cprint (hist, path, name, opt="", stats=False, root = p):
 	hist.Draw(opt)
 		
 	c.SaveAs(path+name+".pdf")
-	root.WriteObject(c, name)
+	c.Write(name)
 #_____________________________________________ END OF DEF
 					
 
@@ -416,15 +416,16 @@ elapsed = end - start
 print("\nComputing time: ", elapsed, "\n") 
 
 
-
 #	open the file with the TBrowser
 
 b = ROOT.TBrowser()
 p.Browse(b)
 
-ROOT.gApplication.Run()	#	allow to interact with the graphic interface
 
-#	TO CLOSE THE INTERFACE AND END THE SCRIPT HIT 
-#	CTRL + Q
+#	exit command
+if input("Press \"q\" to exit from the framework \n") == "q":
+	p.Close()
+	exit()
+
 
 

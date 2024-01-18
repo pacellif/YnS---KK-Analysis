@@ -449,11 +449,11 @@ print("\nComputing time: ", elapsed, "\n")
 b = ROOT.TBrowser()
 fileroot.Browse(b)
 
-ROOT.gApplication.Run()	#	allow to interact with the graphic interface
 
-#	TO CLOSE THE INTERFACE AND END THE SCRIPT HIT 
-#	CTRL + Q
-
+#	exit command
+if input("Press \"q\" to exit from the framework \n") == "q":
+	fileroot.Close()
+	exit()
 
 
 
