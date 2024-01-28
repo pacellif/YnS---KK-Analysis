@@ -34,7 +34,7 @@ Figure 2: $\phi$ spectrum from the ditrack invariant mass. In the framework, dit
 
 ### Requirements
 
-In order to be able to run the scripts it is necessary to have installed ROOT, with the PyROOT module and Python v3.
+In order to be able to run the scripts it is necessary to install `ROOT` with the `PyROOT` module and Python v3, with `Pandas` and `matplotlib` libraries.
 
 It is possible to download the repository from terminal with the command
 ```
@@ -97,6 +97,10 @@ from time import time						#to get the computing time
 from sys import argv						#to pass arguments by command line
 from definitions import UpsTreeDefinitions	#or CandTreeDefinitions for the other script
 import declarations
+
+#  ONLY IN CandAnalysis.py THESE LIBRARIES ARE INCLUDED
+import pandas as pd
+import matplotlib.pyplot as plt
 ```
 Right after, the `Y2SPhiRun2List.txt` is read, and all its lines are trimmed and stored in a list.
 In order to execute only a sample of the whole dataset and speed up the debugging of the code or the correction of the plots, it is possible to pass an integer _N_ as command line argument, selecting the first _N_ .root files to open. At the end of the program, all the saved plots are stored in a directory named "test".
@@ -116,6 +120,8 @@ I implemented a standard function `cprint()` to simply draw and save a histogram
 In general, histograms were made using the RooFit package: 
 `Histo1D()` or `Histo2D()` of the RDataFrame class are used as standard methods to print simple histograms, while to perform the fit of a histogram, RDataFrame is pythonized with the method `AsNumpy()`, then turned into a RooDataSet through the method `from_numpy()`.
 
+In `CandAnalisys.py`, the last plot is realized through the methods of Pandas DataFrame, after exporting data from the RDataFrame.
+
 ### 3. The interface
 
 The interface is designed to allow the user to select which plots to work on. A menu is printed on the terminal at the beginning of the execution, displaying the keys to digit to select the plots. It is possible to choose multiple plots by separating the keys with space.
@@ -134,6 +140,7 @@ Actually, the initial prospect was to work from remote on LXplus without downloa
 For this reason, it could be useful to try solving that issue in order to work entirely from remote. 
 
 Here below, two examples of plots are shown, in particular a histogram and a fit.
+The last plot represents the total spectrum of the candidate.
 
 <img src="https://i.ibb.co/85HBDZ5/pt-1.png" width="500" height="500" />
 
