@@ -254,11 +254,11 @@ def m_kk_fit(ptL = 1.2, ptS = 1.0):
 
 # filters
 ymumu_filter= "dimuon_mass > 9.881 & dimuon_mass < 10.147 & dimuon_pT > 18 & "
-phiKKSelection = '''candidate_vProb > 0.1 &
-ditrack_mass > 1.0150 &
-ditrack_mass < 1.0239 &
-trackL_pT > 1.0 & 
-trackS_pT > 0.8'''
+phiKKSelection = "candidate_vProb > 0.1 & " +
+		 "ditrack_mass > 1.0150 & " +
+		 "ditrack_mass < 1.0239 & " +
+		 "trackL_pT > 1.0 & " +
+		 "trackS_pT > 0.8"
 quality_filter = " & track1_pvAssocQ + track2_pvAssocQ > 11"
 candProb = " & candidate_vProb > 0.05"
 
@@ -343,6 +343,7 @@ def mumukk(zoom = False):
 #___________________________________________________________ END OF DEF
 
 #		NUMBER OF CANDIDATES PER EVENT
+
 #	from the combination of ditracks and dimuons, it is possible to have several many candidates from the same dimuon
 #	by looking at the number of candidates it is possible to act on the multiplicity of candidates per event to 
 #	clean the spectrum from further background countings. 
