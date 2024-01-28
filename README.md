@@ -12,7 +12,7 @@ The spectrum in *Figure 1* represents the first three excited states of $\Upsilo
 The $\phi$ spectrum is extracted from the ditrack, which are reconstructed assuming to be pairs of $K^+K^-$, since CMS can not do PID for this kind of objects. 
 In *Figure 2* there is an example of plot.
 
-After it is found the optimal selection for $\Upsilon$ and $\phi$ candidates, the same cuts are applied on the _candidate_ object, and its whole spectrum is evaluated.
+After it is found the optimal selection for $\Upsilon$ and $\phi$ candidates, the same cuts are applied on the _candidate_ object, and its whole spectrum is measured and represented in Figure 3.
 To do that, two plots are considered and overlapped: the first plot represents a spectrum in which kaons have opposite sign, therefore it may present a signal of a resonance.
 The second plot represents a spectrum in which kaons have same sign, therefore it is considered as a "only background" spectrum.
 By comparing the two plots it is possible to eliminate systematic errors that generate in reconstruction phase, and still allowing the detection of possible resonances.
