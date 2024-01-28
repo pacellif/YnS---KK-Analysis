@@ -338,6 +338,27 @@ def mumukk(zoom = False):
 		p.WriteObject(c0,"phi_candidate(zoom)")
 #___________________________________________________________ END OF DEF
 
+#		NUMBER OF CANDIDATES PER EVENT
+#	from the combination of ditracks and dimuons, it is possible to have several many candidates from the same dimuon
+#	by looking at the number of candidates it is possible to act on the multiplicity of candidates per event to 
+#	clean the spectrum from further background countings. 
+#	Moreover, it is computed the percentage of multiple candidates per event.
+
+def Ncand():
+	
+	dfcands = candSelectionRS.AsNumpy(columns=["event", "run", "candidate_pT",
+									 "candidate_vProb", "candidate_vMass"])
+	
+	candDF = pd.DataFrame(dfcands)
+	candxEvent = candDF.groupby("event")["candidate_vProb"].count()
+	hist = candxEvent.plot(kind="hist", logy=True)
+	plt.show()
+	
+	multiplicity_ratio = (candxEvent > 1).sum()/(candxEvent > 0).sum()
+	print(f"multiplicity ratio is {round(multiplicity_ratio*100, 2)}\%")
+#___________________________________________________________ END OF DEF
+########################################################################
+
 #----------------------------------------------------------------------
 #	MENU
 #----------------------------------------------------------------------
@@ -353,6 +374,7 @@ lang = input("\nSelect plots (Separate by spacing):\n" +
 	     "4. Fit KK invariant mass\n" + 
 	     "5. Phi Candidate plot\n" +
 	     "6. Phi candidate plot with Zoom\n" + 
+	     "7. Candidate multiplicity\n" +
 	     "ENTER: 1-5 Plots\n" + 
 	     "Press \"q\" to EXIT.\n").split()
 
@@ -373,7 +395,7 @@ else:
 	for i in lang:
 	
 		#	avoid misdigit
-		while i not in "1 2 3 4 5 6 q":
+		while i not in "1 2 3 4 5 6 7 q":
 			i = input(f"\"{i}\" is not valid. Please insert a valid key: ")
 
 		#	execution
@@ -383,6 +405,7 @@ else:
 		if i == "4":	m_kk_fit()		#save to .root
 		if i == "5":	mumukk()		#save to .root
 		if i == "6":	mumukk(zoom=True)
+		if i == "7":	Ncand()
 		if i == "q":
 			print ("Bye Bye")
 			exit()
@@ -403,6 +426,8 @@ else:
 				mumukk()		#save to .root
 			case "6":		
 				mumukk(zoom=True)
+    			case "7": 
+       				Ncand()
 			case "q":
 				print ("Bye Bye")
 				exit()
