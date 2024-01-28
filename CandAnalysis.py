@@ -26,7 +26,8 @@ import os
 from sys import argv
 from definitions import CandTreeDefinitions
 import declarations
-
+import pandas as pd
+import matplotlib.pyplot as plt
 
 #	FILES PATH READER
 
@@ -259,6 +260,7 @@ ditrack_mass < 1.0239 &
 trackL_pT > 1.0 & 
 trackS_pT > 0.8'''
 quality_filter = " & track1_pvAssocQ + track2_pvAssocQ > 11"
+candProb = " & candidate_vProb > 0.05"
 
 # ditrack mass: interval of phi rest mass
 # vProb: vertex probability
@@ -267,9 +269,11 @@ binning = 250
 edge = [10.8, 13.3]
 
 	# cuts written on file
-tagli = ymumu_filter+phiKKSelection
+tagli = ymumu_filter + phiKKSelection + quality_filter + candProb
 tagli = tagli.replace(" & ", "\n")
 os.system(f"echo \"{tagli}\nbinning: {binning}\" > {d}/tagli.txt")
+
+
 
 #	CANDIDATE INVARIANT MASS DISTRIBUTION PLOT
 
@@ -346,16 +350,29 @@ def mumukk(zoom = False):
 
 def Ncand():
 	
+	#	the selected candidates
+	candSelectionRS = dataKKrs.Filter(ymumu_filter+phiKKSelection+ candProb + quality_filter)
+
+
 	dfcands = candSelectionRS.AsNumpy(columns=["event", "run", "candidate_pT",
 									 "candidate_vProb", "candidate_vMass"])
 	
 	candDF = pd.DataFrame(dfcands)
 	candxEvent = candDF.groupby("event")["candidate_vProb"].count()
-	hist = candxEvent.plot(kind="hist", logy=True)
+	#hist = candxEvent.plot(kind="hist", logy=True)
+	
+	plt.hist(candxEvent, bins=range(1,9), align="left", edgecolor='black')
+	plt.title("Candidate multiplicity")
+	plt.xlabel("Multiplicity")
+	plt.ylabel("Counts")
+	plt.yscale('log')
+
+	
 	plt.show()
 	
 	multiplicity_ratio = (candxEvent > 1).sum()/(candxEvent > 0).sum()
-	print(f"multiplicity ratio is {round(multiplicity_ratio*100, 2)}\%")
+	print(f"\nmultiplicity ratio is {round(multiplicity_ratio*100, 2)}%")
+	
 #___________________________________________________________ END OF DEF
 ########################################################################
 
@@ -442,9 +459,9 @@ print("\nComputing time: ", elapsed, "\n")
 
 
 #	open the file with the TBrowser
-
-b = ROOT.TBrowser()
-p.Browse(b)
+if "7" not in lang:
+	b = ROOT.TBrowser()
+	p.Browse(b)
 
 
 #	exit command
