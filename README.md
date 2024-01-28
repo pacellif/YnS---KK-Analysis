@@ -1,6 +1,6 @@
 # Analysis of $\Upsilon(2S)$ + $\phi$ spectrum
 
-In this framework I am presenting the script I wrote for an analysis about the searching of possible resonances in the spectrum of the $\Upsilon(2S) \rightarrow \mu\mu + \phi \rightarrow KK$. 
+In this framework I am presenting the script I wrote for an analysis about the searching of possible resonances in the spectrum of the $\Upsilon(2S)(\rightarrow \mu\mu) + \phi (\rightarrow KK)$. 
 All data was collected at CMS during the Run2, elaborated and stored in the _b-Parking_ dataset. 
 It contains a fraction of triggered events which are interesting for the b-physics, but whose reconstruction was delayed to give the priority to other trigger data. From this dataset, the analysed event collections are triggered by the presence of dimuons with specific selection criteria aimed to search for quarkonium states, such as $J/\Psi$, $\Upsilon$, etc. 
 In particular, dimuons in the range of $\Upsilon(2S)$ are selected, as it is done for ditracks in range of $\phi$ coming from the same vertex. Then, all these objects were attached together to form the *candidate*. 
