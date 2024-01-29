@@ -389,15 +389,15 @@ def dimuon_decay():
 #	(since plot functions have no arguments, it reduces the code)
 
 compute = {	"1" : mu_pt,
-			"2" : m_Y2S,
-			"3" : fit_Y2S,
-			"4" : Y_pt,		
-			"5" : Y_vProb,		
-			"6" : Y_rap,
-			"7" : Y_pseudorap,
-			"8" : dimuon_decay,
-			"q" : exit
-	 	 }
+		"2" : m_Y2S,
+		"3" : fit_Y2S,
+		"4" : Y_pt,		
+		"5" : Y_vProb,		
+		"6" : Y_rap,
+		"7" : Y_pseudorap,
+		"8" : dimuon_decay,
+		"q" : exit
+	 }
 
 	
 lang = input("\nSelect plots (Separate by spacing):\n" + 
