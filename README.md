@@ -148,7 +148,7 @@ The last plot represents the total spectrum of the candidate.
 ![KKMass](https://i.ibb.co/Rp4rWpN/Phi-Mass-Plot-1.png)
 |---|
 
-![spectrum](https://i.ibb.co/PG3NzKG/Phi-Candidate.jpg)
+![spectrum](https://i.ibb.co/nrxZ3k2/Schermata-da-2024-02-05-16-24-08.png))
 |---|
 
 Figure 3: Examples of plots: on the top, $p_t$ spectrum of the di-muon; in the middle, fit of the $\phi$ invariant mass; at the bottom, the entire spectrum of the _candidate_
