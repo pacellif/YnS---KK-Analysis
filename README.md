@@ -46,7 +46,8 @@ In the repository there are the README.md, the .py scripts and modules, a direct
 
 ### Download the data
 
-Since the .root files overcome the maximum size for the upload on GitHub, I stored a sample of 10 files in a [CERNBox repository](https://cernbox.cern.ch/s/n8MQnt0WiJF8zGC) (about 190 MB each).
+Since the .root files overcome the maximum size for the upload on GitHub, I stored a sample of 10 files in a [CERNBox repository](https://cernbox.cern.ch/s/n8MQnt0WiJF8zGC) (about 190 MB each). To check all the features of the framework, it is recommended to 
+download __at least__ 2 or 3 files.
 They must be downloaded and unzipped in the specific directory `data`, already included with the git repository.
 In this directory, a file named `Y2SPhiRun2List.txt` is present.
 
